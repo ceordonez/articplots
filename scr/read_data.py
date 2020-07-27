@@ -6,7 +6,10 @@
 import logging
 import os
 import pandas as pd
+import sys
 
+from filecmp import dircmp
+from datetime import datetime
 
 def read_data(path_zipdata, path_unzipdata):
     """Main routine to read Mauritius data.# {{{
@@ -21,19 +24,27 @@ def read_data(path_zipdata, path_unzipdata):
     Dictionary with data
 
     """# }}}
-    # logging.info('Unzipping data in: %s', path_unzipdata)
-    # uncompress_data(path_zipdata, path_unzipdata)
-    # logging.info('Reading LGR data')
+
+    # if there are new data in path_zipdata
+    if len(dircmp(path_zipdata, path_unzipdata).left_only) > 0:
+        logging.info('Unzipping data in: %s', path_unzipdata)
+        uncompress_data(path_zipdata, path_unzipdata)
+    else:
+        now = datetime.now()
+        logging.info('There are not new data on: %s',
+                now.strftime('%d-%m-%Y %H:%M'))
+
+    logging.info('Reading LGR data')
     # TODO: CHECK IF FILES EXIST!!
-    # LGRdata = read_lgr(path_unzipdata)
-    # logging.info('Reading GPS data')
-    # GPSdata = read_gps(path_unzipdata)
-    # Data = GPSdata.join([LGRdata])
-    # Data = Data.reset_index()
-    logging.info('Reading EXO data')
-    read_exo(path_unzipdata)
-    Data = []
+    LGRdata = read_lgr(path_unzipdata)
+    logging.info('Reading GPS data')
+    GPSdata = read_gps(path_unzipdata)
+    # logging.info('Reading EXO data')
+    # read_exo(path_unzipdata)
+    Data = GPSdata.join([LGRdata])
+    Data = Data.reset_index()
     return Data
+
 
 def read_exo(path_unzipdata):# {{{
     """TODO: Docstring for read_exo.
@@ -56,7 +67,7 @@ def read_exo(path_unzipdata):# {{{
         exofile_path = os.path.join(datefile_path, exofile)
         dt = np.dtype([('Date', 'str'), ('Time', 'str'), ('Time_fract', 'int'),
             ('Site', 'float'), ('a', 'int'), ('b', 'float'), ('c', 'float'),
-            ('Temp', 'float'), ('Cond', 'float'), ('Sp', 'float'), ('Sal', 'float'),('nfl cond', 'float'), ('TDS', 'float'), ('ODOsat', 'float'), ('ODO','float'), ('Press', 'float'), ('Depth', 'float')])
+            ('Temp', 'float'), ('Cond', 'float'), ('Sp', 'float'), ('Sal', 'float'), ('nfl cond', 'float'), ('TDS', 'float'), ('ODOsat', 'float'), ('ODO', 'float'), ('Press', 'float'), ('Depth', 'float')])
         with open(exofile_path, 'rb') as f:
             npdata = np.fromfile(f, dtype=dt)#np.dtype('B'))
         print(npdata[0:40])
@@ -71,6 +82,7 @@ def read_exo(path_unzipdata):# {{{
         """
 
     pass# }}}
+
 def read_gps(path_unzipdata):# {{{
     """TODO: Docstring for read_gps.{{{
 
@@ -93,7 +105,12 @@ def read_gps(path_unzipdata):# {{{
     for datefolder in allfiles:
         logging.info('Reading data: %s', datefolder)
         datefolder_path = os.path.join(path_unzipdata, datefolder)
-        gpsfolder = [x for x in os.listdir(datefolder_path) if 'GPS' in x][0]
+        gpsfolder = [x for x in os.listdir(datefolder_path) if 'GPS' in x]
+        try:
+            gpsfolder = gpsfolder[0]
+        except IndexError:
+            logging.warning('YB folder does not found in: %s', datefolder_path)
+            continue
         gpsfolder_path = os.path.join(datefolder_path, gpsfolder)
         for gpsfile in os.listdir(gpsfolder_path):
             gpxfile = open(os.path.join(gpsfolder_path, gpsfile), 'r')
@@ -145,7 +162,12 @@ def read_lgr(newpath):# {{{
     i = 0
     for alldata in os.listdir(newpath):
         allfiles = os.path.join(newpath, alldata)
-        LGRfolderdata = [x for x in os.listdir(allfiles) if 'YB' in x][0]
+        LGRfolderdata = [x for x in os.listdir(allfiles) if any(s in x for s in ('YB', 'GHG'))]
+        try:
+            LGRfolderdata = LGRfolderdata[0]
+        except IndexError:
+            logging.warning('YB or GHG folder does not found in: %s', allfiles)
+            continue
         LGRdatadate = os.path.join(allfiles, LGRfolderdata)
         folderdates = os.listdir(LGRdatadate)
         for date in sorted(folderdates)[:-1]: #NOT READING LAST DATE IN ZIPFILE
@@ -196,15 +218,17 @@ def uncompress_data(path_zipdata, path_unzipdata, rec=False):# {{{
     newfiles = [newf for newf in zipfiles if newf not in unzipfiles] # and zipfile.is_zipfile(newf)]
     for newf in newfiles:
         newzipfiles = os.path.join(path_zipdata, newf)
-        if zipfile.is_zipfile(newzipfiles):
+        if zipfile.is_zipfile(newzipfiles): # newf = New big batch/date of data
             logging.info('Unzip data: %s', newf)
             newunzipfile = os.path.join(path_unzipdata, newf)
-            z = zipfile.ZipFile(newzipfiles)
+            z = zipfile.ZipFile(newzipfiles) # files inside new date data
             for f in z.namelist():
                 logging.info('Unzip data: %s', f)
-                content = io.BytesIO(z.read(f))
-                newunzipfile2 = os.path.join(newunzipfile, f)
-                if "zip" in newunzipfile2[-5:]:
+                newunzipfile2 = os.path.join(newunzipfile, f) #folder inside instrument zipfile
+                newzipfile2 = os.path.join(newzipfiles, f)
+                content = io.BytesIO(z.read(f)) # read content as byte
+                # TODO: CHECK IF FALE READING OR COPY FILES
+                if zipfile.is_zipfile(newunzipfile2):# in newunzipfile2[-5:]:
                     zip_file = zipfile.ZipFile(content)
                     if not os.path.exists(newunzipfile2):
                         os.makedirs(newunzipfile2)
@@ -213,5 +237,5 @@ def uncompress_data(path_zipdata, path_unzipdata, rec=False):# {{{
                 else:
                     if not os.path.exists(newunzipfile):
                         os.makedirs(newunzipfile)
-                    with open(newunzipfile2, "wb") as outfile:
+                    with open(newunzipfile, "wb") as outfile:
                         copy_filelike_to_filelike(content, outfile)

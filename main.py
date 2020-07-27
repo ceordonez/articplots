@@ -21,7 +21,7 @@ def main():
     Data = read_data(ZIPDATA_PATH, UNZIPDATA_PATH)
     logging.info('STEP 2: Plotting data')
     plot_data(Data)
-
+    logging.info("***** ROUTINE COMPLETED SUCCESFULLY *****")
 
 if __name__ == '__main__':
     main()

@@ -19,7 +19,7 @@ def plot_data(data):
 
     plot_timeseries(data)
 
-    #plot_map(data)
+    plot_map(data)
     #combinated_plots(data)
 
 
