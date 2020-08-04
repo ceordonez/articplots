@@ -258,4 +258,5 @@ def create_time_series(dff, sc, nameev, mindate, maxdate, selectedpoints, cleard
     fig.add_trace(TimeSeries)
     return fig
 
-app.run_server(debug=True)
+if __name__=="__main__":
+    app.run_server(debug=True)

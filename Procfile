@@ -1,1 +1,1 @@
-web: gunicorn ArticChangeApp.py:server
+web: gunicorn ArticChangeApp:server
