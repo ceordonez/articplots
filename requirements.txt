@@ -30,7 +30,7 @@ GDAL==3.0.4
 gpg===1.13.1-unknown
 gunicorn==20.0.4
 html5lib==1.0.1
-httplib2==0.14.0
+httplib2==0.18.0
 idna==2.8
 importlib-metadata==1.5.0
 ipython-genutils==0.2.0
