@@ -75,8 +75,10 @@ app.layout = html.Div([
         style={'width': '29%', 'display': 'inline-block', 'padding': '10px 10px',
             'BorderBottom': 'thin lightgrey solid', 'backgroundColor':'rgb(250,250,250)'}),
     html.Div([
-        dcc.Graph(id='map', figure={}),
-        dcc.Graph(id='time-series', figure={})
+        html.Div([
+            dcc.Graph(id='map', figure={})], style={'height': "59vh"}),
+        html.Div([
+            dcc.Graph(id='time-series', figure={})], style={'height': "39vh"}),
         ], style={'width':'69%', 'display': 'inline-block', 'float': 'right'})
     ])
 
@@ -237,6 +239,8 @@ def create_map(dff, nameev, selectedpoints, sc):
     ])# }}}
     fig.update_layout(
             mapbox=mapbox, updatemenus=updatemenus,
+            height=550,
+            margin=dict(t=0, b=0),
         )
     fig.add_trace(mapplot)
     return fig
@@ -249,14 +253,16 @@ def create_time_series(dff, sc, nameev, mindate, maxdate, selectedpoints, cleard
             '<b>Date</b>: %{text}'+
             '<br><b>Value</b>: %{customdata} (ppm)</br>')# }}}
     layout = dict(
-            yaxis_title=nameev + ' (ppm)')
+            yaxis_title=nameev + ' (ppm)',
+            height=400,
+            )
     if not cleardata:
         df = dff.loc[selectedpoints]
         mindate = df['Datetime'].min()
         maxdate = df['Datetime'].max()
         layout = dict(
                 yaxis_title=nameev + ' (ppm)',
-                xaxis=dict(range=[mindate, maxdate])
+                xaxis=dict(range=[mindate, maxdate]),
                 )
     fig.update_layout(layout)
     fig.add_trace(TimeSeries)
