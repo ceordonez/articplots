@@ -185,62 +185,62 @@ def create_map(dff, nameev, selectedpoints, sc):
         # default map style
         style="stamen-terrain" #"stamen-toner" #"stamen-watercolor" #"carto-darkmatter" #"carto-positron" #'stamen-terrain'
         )# }}}
-    updatemenus=list([# {{{
-    dict(# {{{
-            buttons=list([
-                dict(
-                    args=["marker.colorscale", "Cividis"],
-                    label="Cividis",
-                    method="restyle"
-                ),
-                dict(
-                    args=["marker.colorscale", "Blues"],
-                    label="Blues",
-                    method="restyle"
-                ),
-                dict(
-                    args=["marker.colorscale", "Greens"],
-                    label="Greens",
-                    method="restyle"
-                ),
-            ]),
-            direction="down",
-            pad={"r": 10, "t": 10},
-            showactive=True,
-            x=1.01,
-            xanchor="left",
-            y=1.02,
-            yanchor="bottom"
-        ),# }}}
-    dict(# {{{
-           buttons=list([
-               dict(
-                   args=['mapbox.style','stamen-terrain'],
-                   label='Stamen-terrain',
-                   method='relayout'
-                   ),
-               dict(
-                   args=['mapbox.style','stamen-watercolor'],
-                   label='Stamen-watercolor',
-                   method='relayout'
-                   ),
-               dict(
-                   args=['mapbox.style','carto-darkmatter'],
-                   label='Carto-darkmatter',
-                   method='relayout'
-                   )
-               ]),
-           direction='down',
-           x=0.98,
-           xanchor='right',
-           y=0.95,
-           yanchor='top'
-           )# }}}
-    ])# }}}
+    # updatemenus=list([# {{{
+    #     dict(# {{{
+    #             buttons=list([
+    #                 dict(
+    #                     args=["marker.colorscale", "Cividis"],
+    #                     label="Cividis",
+    #                     method="restyle"
+    #                 ),
+    #                 dict(
+    #                     args=["marker.colorscale", "Blues"],
+    #                     label="Blues",
+    #                     method="restyle"
+    #                 ),
+    #                 dict(
+    #                     args=["marker.colorscale", "Greens"],
+    #                     label="Greens",
+    #                     method="restyle"
+    #                 ),
+    #             ]),
+    #             direction="down",
+    #             pad={"r": 10, "t": 10},
+    #             showactive=True,
+    #             x=1.01,
+    #             xanchor="left",
+    #             y=1.02,
+    #             yanchor="bottom"
+    #         ),# }}}
+    #     dict(# {{{
+    #            buttons=list([
+    #                dict(
+    #                    args=['mapbox.style', 'stamen-terrain'],
+    #                    label='Stamen-terrain',
+    #                    method='relayout'
+    #                    ),
+    #                dict(
+    #                    args=['mapbox.style', 'stamen-watercolor'],
+    #                    label='Stamen-watercolor',
+    #                    method='relayout'
+    #                    ),
+    #                dict(
+    #                    args=['mapbox.style', 'carto-darkmatter'],
+    #                    label='Carto-darkmatter',
+    #                    method='relayout'
+    #                    )
+    #                ]),
+    #            direction='down',
+    #            x=0.98,
+    #            xanchor='right',
+    #            y=0.95,
+    #            yanchor='top'
+    #            )# }}}
+    # ])# }}}
     fig.update_layout(
-            mapbox=mapbox, updatemenus=updatemenus,
+            mapbox=mapbox,
             height=550,
-            margin=dict(t=15, b=10),
+            margin=dict(t=25, b=25),
         )
     fig.add_trace(mapplot)
     return fig
@@ -254,7 +254,7 @@ def create_time_series(dff, sc, nameev, mindate, maxdate, selectedpoints, cleard
             '<br><b>Value</b>: %{customdata} (ppm)</br>')# }}}
     layout = dict(
             yaxis_title=nameev + ' (ppm)',
-            height=400,
+            height=380, margin=dict(t=25, b=55)
             )
     if not cleardata:
         df = dff.loc[selectedpoints]
