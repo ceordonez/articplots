@@ -204,7 +204,7 @@ def create_map(dff, nameev, selectedpoints, sc):
                     method="restyle"
                 ),
             ]),
-            direction="up",
+            direction="down",
             pad={"r": 10, "t": 10},
             showactive=True,
             x=1.01,
@@ -240,7 +240,7 @@ def create_map(dff, nameev, selectedpoints, sc):
     fig.update_layout(
             mapbox=mapbox, updatemenus=updatemenus,
             height=550,
-            margin=dict(t=0, b=0),
+            margin=dict(t=15, b=10),
         )
     fig.add_trace(mapplot)
     return fig
