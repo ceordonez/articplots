@@ -28,10 +28,13 @@ mapselector = None
 tsselector = None
 cleardata = True
 
-# --------------------
-# App layout
+#------------------------------------------------------------------
 
 app = dash.Dash(__name__)
+server = app.server
+
+#------------------------------------------------------------------
+# App layout
 app.layout = html.Div([
     html.Div([
         html.H2('Mauritius Information'),
@@ -76,7 +79,8 @@ app.layout = html.Div([
         dcc.Graph(id='time-series', figure={})
         ], style={'width':'69%', 'display': 'inline-block', 'float': 'right'})
     ])
-# --------------------
+
+#------------------------------------------------------------------
 # Connect Plotly with Dash Components
 @app.callback(
         [Output(component_id='map', component_property='figure'),
@@ -258,5 +262,6 @@ def create_time_series(dff, sc, nameev, mindate, maxdate, selectedpoints, cleard
     fig.add_trace(TimeSeries)
     return fig
 
-if __name__=="__main__":
+#------------------------------------------------------------------
+if __name__ == "__main__":
     app.run_server(debug=True)
