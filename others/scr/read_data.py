@@ -43,6 +43,7 @@ def read_data(path_zipdata, path_unzipdata):
     # read_exo(path_unzipdata)
     Data = GPSdata.join([LGRdata])
     Data = Data.reset_index()
+    Data.to_csv('AllData.csv')
     return Data
 
 
