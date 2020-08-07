@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 import dash
+import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
@@ -30,57 +31,90 @@ cleardata = True
 
 #------------------------------------------------------------------
 
-app = dash.Dash(__name__)
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.SUPERHERO])
 server = app.server
+
+#------------------------------------------------------------------
+# Cards
+
+cardmain = dbc.Card(
+        [
+            dbc.CardBody(
+                [
+                    html.H2('Mauritius Information'),
+                    html.H4('Last location reported: %s' % lastloc),
+                    html.H4('Last date reported: %s' % lastime),
+                    html.H2('General selections'),
+                    html.Label(['Choose variable:'], style={'font-weight': 'bold', 'text-align': 'center'}),
+                    dcc.Dropdown(id='slct_var',# {{{
+                        options=[
+                            {"label":"Carbon Dioxide", "value":'CO2d_ppm'},
+                            {"label":"Methane", "value":"CH4d_ppm"},
+                            {"label":"Temperature", "value":"Temp", "disabled":True},
+                            {"label":"Salinity", "value":"Temp", "disabled":True},
+                            ],
+                        multi=False,
+                        optionHeight=35,
+                        value='CO2d_ppm',
+                        searchable=True,
+                        placeholder='Please select...',
+                        style={'color': '#000000'},
+                        clearable=False,
+                        ),# }}}
+                    html.Br(),
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                html.Label(['Select Dates:'], style={'font-weight': 'bold', 'text-align': 'center'}),
+                                width={"size": 2.3, "order": "first", "offset": 0.2},
+                                ),
+                            dbc.Col(
+                                dcc.DatePickerRange(
+                                    id='date-picker',
+                                    min_date_allowed=data['Datetime'].min(),
+                                    max_date_allowed=data['Datetime'].max(),
+                                    initial_visible_month=data['Datetime'].mean(),
+                                    clearable=False,
+                                    display_format='D.M.YYYY'
+                                    ),
+                                width={"size": 6.5, "offset": 0.2},
+                                ),
+                            dbc.Col(
+                                html.Button('Clear Selection', id='button-clear', n_clicks=0),
+                                width={"size": 2.3, "offset": 0.2, "order": "last"},
+                                ),
+                            ], align="center", justify='around'
+                    ),
+                    #style={'display': 'inline-block', 'padding': '10px 30px'}),
+                    #    style={'display': 'inline-block'}),
+
+                    ]
+                ),
+            ],
+        color="Dark",
+        inverse=True,
+        outline=False,
+        )
+
+graph_card = dbc.Card(
+        [
+            dcc.Graph(id='map', figure={}),
+            dcc.Graph(id='time-series', figure={}),
+            ],
+        body=True,
+    )
 
 #------------------------------------------------------------------
 # App layout
 app.layout = html.Div([
-    html.Div([
-        html.H2('Mauritius Information'),
-        html.H4('Last location reported: %s' % lastloc),
-        html.H4('Last date reported: %s' % lastime),
-        html.H2('General selections'),
-        html.Label(['Choose variable:'], style={'font-weight': 'bold', 'text-align': 'center'}),
-        dcc.Dropdown(id='slct_var',# {{{
-            options=[
-                {"label":"Carbon Dioxide", "value":'CO2d_ppm'},
-                {"label":"Methane", "value":"CH4d_ppm"},
-                {"label":"Temperature", "value":"Temp", "disabled":True},
-                {"label":"Salinity", "value":"Temp", "disabled":True},
-                ],
-            multi=False,
-            optionHeight=35,
-            value='CO2d_ppm',
-            searchable=True,
-            placeholder='Please select...',
-            style={'width':"100%"},
-            clearable=False,
-            ),# }}}
-        html.Br(),
-        html.Label(['Select Dates: '], style={'font-weight': 'bold', 'text-align': 'center'}),
-        html.Div([
-            html.Div([dcc.DatePickerRange(
-                id='date-picker',
-                min_date_allowed=data['Datetime'].min(),
-                max_date_allowed=data['Datetime'].max(),
-                initial_visible_month=data['Datetime'].mean(),
-                clearable=False,
-                display_format='D.M.YYYY')],
-                style={'display': 'inline-block', 'padding': '10px 30px'}),
-            html.Div([html.Button('Clear Selection', id='button-clear', n_clicks=0)], 
-                style={'display': 'inline-block'}),
-            ]),
-        ],
-        style={'width': '29%', 'display': 'inline-block', 'padding': '10px 10px',
-            'BorderBottom': 'thin lightgrey solid', 'backgroundColor':'rgb(250,250,250)'}),
-    html.Div([
-        html.Div([
-            dcc.Graph(id='map', figure={})], style={'height': "59vh"}),
-        html.Div([
-            dcc.Graph(id='time-series', figure={})], style={'height': "39vh"}),
-        ], style={'width':'69%', 'display': 'inline-block', 'float': 'right'})
-    ])
+    dbc.Row(
+        [
+            dbc.Col(cardmain, width=12, lg={'size': 4}),
+            dbc.Col(graph_card, width=12, lg={'size': 8})
+            ]
+        )
+    ],
+    )
 
 #------------------------------------------------------------------
 # Connect Plotly with Dash Components
@@ -169,7 +203,7 @@ def create_map(dff, nameev, selectedpoints, sc):
                 '<b>Longitude</b>: %{lon:.2f}°E'
                 '<br><b>Value</b>: %{customdata} (ppm)</br>',# }}}
             selectedpoints=selectedpoints,
-            marker=dict(size=15, opacity=0.7, color=sc, showscale=True, colorscale=px.colors.sequential.Cividis, colorbar=dict(title="(ppm)", len=1)),
+            marker=dict(size=15, opacity=0.7, color=sc, showscale=True, colorscale=px.colors.sequential.Cividis, colorbar=dict(title="(ppm)", len=1), cmin=sc.iloc[selectedpoints].min(), cmax=sc.iloc[selectedpoints].max()),
             unselected=dict(marker=dict(opacity=0.3, size=5, color='rgb(150,150,150)')),
               )# }}}
     mapbox = dict(# {{{
@@ -181,7 +215,7 @@ def create_map(dff, nameev, selectedpoints, sc):
         # we want the map to be "parallel" to our screen, with no angle
         pitch=0,
         # default level of zoom
-        zoom=1,
+        # zoom=1,
         # default map style
         style="stamen-terrain" #"stamen-toner" #"stamen-watercolor" #"carto-darkmatter" #"carto-positron" #'stamen-terrain'
         )# }}}
@@ -239,8 +273,8 @@ def create_map(dff, nameev, selectedpoints, sc):
     # ])# }}}
     fig.update_layout(
             mapbox=mapbox,
-            height=550,
-            margin=dict(t=25, b=25),
+            margin=dict(t=35, b=25),
+            autosize=True,
         )
     fig.add_trace(mapplot)
     return fig
@@ -254,7 +288,7 @@ def create_time_series(dff, sc, nameev, mindate, maxdate, selectedpoints, cleard
             '<br><b>Value</b>: %{customdata} (ppm)</br>')# }}}
     layout = dict(
             yaxis_title=nameev + ' (ppm)',
-            height=380, margin=dict(t=25, b=55)
+            margin=dict(t=30, b=55)
             )
     if not cleardata:
         df = dff.loc[selectedpoints]
@@ -263,6 +297,8 @@ def create_time_series(dff, sc, nameev, mindate, maxdate, selectedpoints, cleard
         layout = dict(
                 yaxis_title=nameev + ' (ppm)',
                 xaxis=dict(range=[mindate, maxdate]),
+                margin=dict(t=30, b=55),
+                autosize=True,
                 )
     fig.update_layout(layout)
     fig.add_trace(TimeSeries)
