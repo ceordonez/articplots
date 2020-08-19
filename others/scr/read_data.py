@@ -39,9 +39,10 @@ def read_data(path_zipdata, path_unzipdata):
     LGRdata = read_lgr(path_unzipdata)
     logging.info('Reading GPS data')
     GPSdata = read_gps(path_unzipdata)
-    # logging.info('Reading EXO data')
-    # read_exo(path_unzipdata)
-    Data = GPSdata.join([LGRdata])
+    logging.info('Reading EXO data')
+    exodata = read_exo(path_unzipdata)
+    Data = GPSdata.join([LGRdata, exodata])
+    Data = Data.resample('10T').mean()
     Data = Data.reset_index()
     Data.to_csv('AllData.csv')
     return Data
@@ -62,27 +63,47 @@ def read_exo(path_unzipdata):# {{{
     import numpy as np
 
     allfiles = os.listdir(path_unzipdata)
+    i = 0
+    data = []
     for datefile in allfiles:
         datefile_path = os.path.join(path_unzipdata, datefile)
-        exofile = [x for x in os.listdir(datefile_path) if ".bin" in x][0]
+        exofile = [x for x in os.listdir(datefile_path) if ".csv" in x][0]
         exofile_path = os.path.join(datefile_path, exofile)
-        dt = np.dtype([('Date', 'str'), ('Time', 'str'), ('Time_fract', 'int'),
-            ('Site', 'float'), ('a', 'int'), ('b', 'float'), ('c', 'float'),
-            ('Temp', 'float'), ('Cond', 'float'), ('Sp', 'float'), ('Sal', 'float'), ('nfl cond', 'float'), ('TDS', 'float'), ('ODOsat', 'float'), ('ODO', 'float'), ('Press', 'float'), ('Depth', 'float')])
-        with open(exofile_path, 'rb') as f:
-            npdata = np.fromfile(f, dtype=dt)#np.dtype('B'))
-        print(npdata[0:40])
-        __import__('pdb').set_trace()
-        """
-        with open(exofile_path, 'rb') as f:
-            byte = f.read(1)
-            while byte:
-                byte = f.readline()
-                print(byte)
-                __import__('pdb').set_trace()
-        """
+        logging.info('Reading file: %s' % exofile_path)
+        try:
+            exodata = pd.read_csv(exofile_path, sep=',', encoding='utf-16', skiprows=9)
+        except Exception:
+            exodata = pd.read_csv(exofile_path, sep=',', encoding='utf-8', skiprows=8)
+        exodata = exodata.dropna()
+        exodata = exodata.set_index('Date (MM/DD/YYYY)')
+        if 'Date (MM/DD/YYYY)' in exodata.index.values:
+            exodata = exodata.drop('Date (MM/DD/YYYY)', axis=0)
+        exodata = exodata.reset_index()
+        exodata['Datetime'] = pd.to_datetime(exodata['Date (MM/DD/YYYY)'] + ' ' + exodata['Time (HH:mm:ss)'], format='%m/%d/%Y %H:%M:%S')
+        data = append_pddata(i, data, exodata)
+        i += 1
+    data = data.drop(['Site Name', 'Date (MM/DD/YYYY)', 'Time (HH:mm:ss)'], axis=1)
+    data = data.set_index('Datetime')
+    data = data.sort_index()
+    data = data.astype(float)
+    data = data.resample("1T").mean()
+    return data #}}}
 
-    pass# }}}
+    """# {{{
+    dt = np.dtype([('Date', 'str'), ('Time', 'str'), ('Time_fract', 'int'),
+        ('Site', 'float'), ('a', 'int'), ('b', 'float'), ('c', 'float'),
+        ('Temp', 'float'), ('Cond', 'float'), ('Sp', 'float'), ('Sal', 'float'), ('nfl cond', 'float'), ('TDS', 'float'), ('ODOsat', 'float'), ('ODO', 'float'), ('Press', 'float'), ('Depth', 'float')])
+    with open(exofile_path, 'rb') as f:
+        npdata = np.fromfile(f, dtype=dt)#np.dtype('B'))
+    print(npdata[0:40])
+    __import__('pdb').set_trace()
+    with open(exofile_path, 'rb') as f:
+        byte = f.read(1)
+        while byte:
+            byte = f.readline()
+            print(byte)
+            __import__('pdb').set_trace()
+    """# }}}
 
 def read_gps(path_unzipdata):# {{{
     """TODO: Docstring for read_gps.{{{

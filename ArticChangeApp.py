@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 import pandas as pd
 from datetime import datetime as dt
@@ -13,13 +14,16 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 # --------------------
 # Read data
-data = pd.read_csv('AllData.csv', parse_dates=[1], index_col=[0])
+data = pd.read_csv('others/AllData.csv', parse_dates=[1], index_col=[0])
 data = data.set_index('Datetime')
 data = data.resample('60T').mean()
 data = data.reset_index()
 data['Date'] = data['Datetime'].dt.strftime('%d-%m-%y %H:%M')
 data['CH4'] = data['CH4d_ppm'].round(2).astype(str)
+data['Temperature'] = data['Temp °C'].round(2).astype(str)
+data['Salinity'] = data['Sal psu'].round(2).astype(str)
 data['CO2'] = data['CO2d_ppm'].round(1).astype(str)
+data['Oxygen'] = data['ODO % sat'].round(1).astype(str)
 mapbox_access_token = open(".mapbox_token").read()
 lastloc = '%.2f°N, %.2f°E'  % (data['Latitude'].iloc[-1], data['Longitude'].iloc[-1])
 lastime = data['Date'].iloc[-1]
@@ -28,7 +32,7 @@ maxdatepicker = None
 mapselector = None
 tsselector = None
 cleardata = True
-
+print(data.columns)
 #------------------------------------------------------------------
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.SUPERHERO])
@@ -42,16 +46,17 @@ cardmain = dbc.Card(
             dbc.CardBody(
                 [
                     html.H2('Mauritius Information'),
-                    html.H4('Last location reported: %s' % lastloc),
-                    html.H4('Last date reported: %s' % lastime),
-                    html.H2('General selections'),
+                    html.H5('Last location reported: %s' % lastloc),
+                    html.H5('Last date reported: %s' % lastime),
+                    html.H3('General selections'),
                     html.Label(['Choose variable:'], style={'font-weight': 'bold', 'text-align': 'center'}),
                     dcc.Dropdown(id='slct_var',# {{{
                         options=[
                             {"label":"Carbon Dioxide", "value":'CO2d_ppm'},
                             {"label":"Methane", "value":"CH4d_ppm"},
-                            {"label":"Temperature", "value":"Temp", "disabled":True},
-                            {"label":"Salinity", "value":"Temp", "disabled":True},
+                            {"label":"Temperature", "value":"Temp °C"},
+                            {"label":"Salinity", "value":'Sal psu'},
+                            {"label":"Oxygen saturation", "value":'ODO % sat'},
                             ],
                         multi=False,
                         optionHeight=35,
@@ -98,8 +103,9 @@ cardmain = dbc.Card(
 
 graph_card = dbc.Card(
         [
-            dcc.Graph(id='map', figure={}),
-            dcc.Graph(id='time-series', figure={}),
+            dcc.Graph(id='map', figure={}, responsive='auto', style={'height': '65vh'}),
+            html.Br(),
+            dcc.Graph(id='time-series', figure={}, responsive='auto', style={'height':'25vh'}),
             ],
         body=True,
     )
@@ -182,12 +188,12 @@ def update_graph(option_slctd, mindate, maxdate, selectedMap, selectedTS, btncle
         dff = data.copy()
     dff = dff.reset_index()
     sc = dff[option_slctd]
-    nameev = option_slctd[:3]
-    figmap = create_map(dff, nameev, selectedpoints, sc)
-    figtime = create_time_series(dff, sc, nameev, mindate, maxdate, selectedpoints, cleardata)
+    #figmap = create_map2(dff, namevar(option_slctd), selectedpoints, sc, units(option_slctd))
+    figmap = create_map(dff, namevar(option_slctd), selectedpoints, sc, units(option_slctd))
+    figtime = create_time_series(dff, sc, namevar(option_slctd), mindate, maxdate, selectedpoints, cleardata, units(option_slctd))
     return figmap, figtime
 
-def create_map(dff, nameev, selectedpoints, sc):
+def create_map(dff, nameev, selectedpoints, sc, unit):
     fig = go.Figure()
     mapplot = go.Scattermapbox(# {{{
             lat=dff.Latitude,
@@ -197,13 +203,14 @@ def create_map(dff, nameev, selectedpoints, sc):
             text=dff.Date,
             name=nameev,
             customdata=dff[nameev],
+            meta=unit,
             hovertemplate=# {{{
                 '<b>Date</b>: %{text}' +
                 '<br><b>Latitude</b>: %{lat:.2f}°N</br>' +
                 '<b>Longitude</b>: %{lon:.2f}°E'
-                '<br><b>Value</b>: %{customdata} (ppm)</br>',# }}}
+                '<br><b>Value</b>: %{customdata} %{meta}</br>',# }}}
             selectedpoints=selectedpoints,
-            marker=dict(size=15, opacity=0.7, color=sc, showscale=True, colorscale=px.colors.sequential.Cividis, colorbar=dict(title="(ppm)", len=1), cmin=sc.iloc[selectedpoints].min(), cmax=sc.iloc[selectedpoints].max()),
+            marker=dict(size=15, opacity=0.7, color=sc, showscale=True, colorscale=px.colors.sequential.Cividis, colorbar=dict(title=unit, len=1), cmin=sc.iloc[selectedpoints].min(), cmax=sc.iloc[selectedpoints].max()),
             unselected=dict(marker=dict(opacity=0.3, size=5, color='rgb(150,150,150)')),
               )# }}}
     mapbox = dict(# {{{
@@ -217,7 +224,7 @@ def create_map(dff, nameev, selectedpoints, sc):
         # default level of zoom
         # zoom=1,
         # default map style
-        style="stamen-terrain" #"stamen-toner" #"stamen-watercolor" #"carto-darkmatter" #"carto-positron" #'stamen-terrain'
+        style="light" # "stamen-terrain" #"stamen-toner" #"stamen-watercolor" #"carto-darkmatter" #"carto-positron" #'stamen-terrain'
         )# }}}
     # updatemenus=list([# {{{
     #     dict(# {{{
@@ -279,7 +286,62 @@ def create_map(dff, nameev, selectedpoints, sc):
     fig.add_trace(mapplot)
     return fig
 
-def create_time_series(dff, sc, nameev, mindate, maxdate, selectedpoints, cleardata):
+def create_map2(dff, nameev, selectedpoints, sc, unit):
+    vmin = sc.iloc[selectedpoints].min()# {{{
+    vmax = sc.iloc[selectedpoints].max()
+    vmean = sc.iloc[selectedpoints].mean()
+    vborders = max(abs(vmin-vmean), abs(vmax-vmean))
+    vbmin = vmean-vborders
+    vbmax = vmean+vborders
+    fig = go.Figure(
+            go.Scattergeo(# {{{
+                lat=dff.Latitude,
+                lon=dff.Longitude,
+                visible=True,
+                showlegend=False,
+                text=dff.Date,
+                name=nameev,
+                customdata=dff[nameev],
+                meta=unit,
+                hovertemplate=# {{{
+                    '<b>Date</b>: %{text}' +
+                    '<br><b>Latitude</b>: %{lat:.2f}°N</br>' +
+                    '<b>Longitude</b>: %{lon:.2f}°E'
+                    '<br><b>Value</b>: %{customdata} %{meta}</br>',# }}}
+                selectedpoints=selectedpoints,
+                marker=dict(size=10, opacity=0.7, color=sc, showscale=True, colorscale=px.colors.sequential.RdBu, colorbar=dict(title=unit, len=1), cmin=vbmin, cmax=vbmax),
+                unselected=dict(marker=dict(opacity=0.3, size=5, color='rgb(150,150,150)')),
+                )# }}}
+        )
+    ylat = 90#dff.Latitude.mean()
+    dlatmin = ylat - dff.Latitude.min()
+    dlatmax = dff.Latitude.max() - ylat
+    fig.update_geos(
+            center=dict(lat=ylat, lon=0*dff.Longitude.mean()),
+            projection_rotation=dict(lat=ylat),
+            projection=dict(type='orthographic'),
+            fitbounds='locations',
+            scope='world',
+            lonaxis=dict(showgrid=True),# range=[-60, 60]),
+            lataxis=dict(showgrid=True, dtick=5),
+            showsubunits=True,
+            showcountries=True,
+            showocean=True,
+            resolution=50,
+            landcolor="#E3E4EB",
+            subunitcolor="rgb(255, 255, 255)",
+            countrycolor='black',#"rgb(255, 255, 255)",
+            oceancolor="#4C5C7F",
+            )
+    fig.update_layout(
+            height=800,
+            width=800,
+            autosize=True,
+            margin={"r":20,"t":30,"l":30,"b":0},
+            )
+    return fig# }}}
+
+def create_time_series(dff, sc, nameev, mindate, maxdate, selectedpoints, cleardata, unit):
     fig = go.Figure()
     TimeSeries = go.Scatter(x=dff.Datetime, y=sc, mode='markers',# {{{
             showlegend=False, visible=True, name=nameev, text=dff.Date,
@@ -287,15 +349,16 @@ def create_time_series(dff, sc, nameev, mindate, maxdate, selectedpoints, cleard
             '<b>Date</b>: %{text}'+
             '<br><b>Value</b>: %{customdata} (ppm)</br>')# }}}
     layout = dict(
-            yaxis_title=nameev + ' (ppm)',
-            margin=dict(t=30, b=55)
+            yaxis_title=' '.join([nameev, unit]),
+            margin=dict(t=30, b=55),
+            autosize=True,
             )
     if not cleardata:
         df = dff.loc[selectedpoints]
         mindate = df['Datetime'].min()
         maxdate = df['Datetime'].max()
         layout = dict(
-                yaxis_title=nameev + ' (ppm)',
+                yaxis_title=' '.join([nameev, unit]),
                 xaxis=dict(range=[mindate, maxdate]),
                 margin=dict(t=30, b=55),
                 autosize=True,
@@ -304,6 +367,28 @@ def create_time_series(dff, sc, nameev, mindate, maxdate, selectedpoints, cleard
     fig.add_trace(TimeSeries)
     return fig
 
+def namevar(option_slctd):
+    if 'CO2' in option_slctd or 'CH4' in option_slctd:
+        nameev = option_slctd[:3]
+    elif 'Sal' in option_slctd:
+        nameev = 'Salinity'
+    elif 'Temp' in option_slctd:
+        nameev = 'Temperature'
+    elif 'ODO % sat' in option_slctd:
+        nameev = 'Oxygen'
+    return nameev
+
+def units(option_slctd):
+    units = '()'
+    if 'CH4' in option_slctd or 'CO2' in option_slctd:
+        units = '(ppm)'
+    elif 'Temp' in option_slctd:
+        units = '(°C)'
+    elif 'Sal' in option_slctd:
+        units = '(psu)'
+    elif 'ODO' in option_slctd:
+        units = '(%)'
+    return units
 #------------------------------------------------------------------
 if __name__ == "__main__":
     app.run_server(debug=True)
