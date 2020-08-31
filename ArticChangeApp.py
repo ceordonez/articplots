@@ -28,7 +28,7 @@ data['Temperature'] = data['Temp °C'].round(2).astype(str)
 data['Salinity'] = data['Sal psu'].round(2).astype(str)
 data['CO2'] = data['CO2d_ppm'].round(1).astype(str)
 data['Oxygen'] = data['ODO % sat'].round(1).astype(str)
-mapbox_access_token = open(".mapbox_token_new").read()
+mapbox_access_token = open(".mapbox_token").read()
 lastloc = '%.2f°N, %.2f°E'  % (data['Latitude'].iloc[-1], data['Longitude'].iloc[-1])
 lastime = data['Date'].iloc[-1]
 #print(data.columns)
