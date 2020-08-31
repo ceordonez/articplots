@@ -18,7 +18,9 @@ from dash.dependencies import Input, Output, State
 # Read data
 data = pd.read_csv('others/AllData.csv', parse_dates=[1], index_col=[0])
 data = data.set_index('Datetime')
-data = data.resample('240T').mean()
+#data = data.resample('1440T').mean()
+#data = data.resample('240T').mean()
+data = data.resample('720T').mean()
 data = data.reset_index()
 data['Date'] = data['Datetime'].dt.strftime('%d-%m-%y %H:%M')
 data['CH4'] = data['CH4d_ppm'].round(2).astype(str)
@@ -26,7 +28,7 @@ data['Temperature'] = data['Temp °C'].round(2).astype(str)
 data['Salinity'] = data['Sal psu'].round(2).astype(str)
 data['CO2'] = data['CO2d_ppm'].round(1).astype(str)
 data['Oxygen'] = data['ODO % sat'].round(1).astype(str)
-mapbox_access_token = open(".mapbox_token").read()
+mapbox_access_token = open(".mapbox_token_new").read()
 lastloc = '%.2f°N, %.2f°E'  % (data['Latitude'].iloc[-1], data['Longitude'].iloc[-1])
 lastime = data['Date'].iloc[-1]
 #print(data.columns)
@@ -120,29 +122,39 @@ cardmain = dbc.Card([
         html.H6('Last location reported: ' + lastloc),
         html.H6('Last date reported: ' + lastime),
     ])
-app.layout = html.Div([
-
-    html.H4('Mauritius information'),
-    html.H6('Last location reported: ' + lastloc),
-    html.H6('Last date reported: ' + lastime),
-    dbc.Row([
-        dbc.Col(html.H5('Select date'), width={'size':12}),
-        dbc.Col(
-            dcc.RangeSlider(
-                id='date-slider',
-                min=unix_time_millis(data.Datetime.min()),
-                max=unix_time_millis(data.Datetime.max()),
-                step=1,
-                value=[unix_time_millis(data.Datetime.min()),
-                    unix_time_millis(data.Datetime.max())],
-                marks=get_marks_from_start_end(data.Datetime.min(),
-                    data.Datetime.max())),
-            width={'size':12})
-        ], style={'margin-top':5}),
+app.layout = dbc.Container([
+        dbc.Row([
+            dbc.Col(
+                html.H2('Artic Expedition 2020-2024', style={'font-weight':'bold'}),
+                width={'size': 6, 'offset':0}, lg={'size':4, 'offset':1},#, style={'height':'10vh'}
+                ),
+            dbc.Col(
+                [
+                    html.H6('Last location reported: ' + lastloc, style={'text-align':'right'}),
+                    html.H6('Last date reported: ' + lastime, style={'text-align':'right'}),
+                    ],
+                width={'size':5, 'offset':1}, lg={'size':3, 'offset':3}, #style={'height':'10vh'}
+                ),
+            ], align='center', style={'height':'8vh'}
+            ),
+    # dbc.Row([
+    #     dbc.Col(html.H5('Select date'), width={'size':12}),
+    #     dbc.Col(
+    #         dcc.RangeSlider(
+    #             id='date-slider',
+    #             min=unix_time_millis(data.Datetime.min()),
+    #             max=unix_time_millis(data.Datetime.max()),
+    #             step=1,
+    #             value=[unix_time_millis(data.Datetime.min()),
+    #                 unix_time_millis(data.Datetime.max())],
+    #             marks=get_marks_from_start_end(data.Datetime.min(),
+    #                 data.Datetime.max())),
+    #         width={'size':10})
+    #     ], style={'margin-top':5}),
     dbc.Row(
         [
             dbc.Col(
-                html.H6('Select variable:'), className='h-100', width={'size':2}, lg={'size':1}, align='center'),
+                html.H6('Select variable:'), width={'size':1}, lg={'size':1, 'offset':1}, align='center'),
             dbc.Col(
                 dcc.Dropdown(id='slct_var',# {{{
                      options=[
@@ -160,24 +172,42 @@ app.layout = html.Div([
                      style={'color': '#000000'},
                      clearable=False,
                      ),# }}}
-                width=4, lg={'size':2},
+                width=3, lg={'size':2, 'offset':0},
                 ),
             dbc.Col(
-                html.H6(id='average_value'), className='h-50', width={'size':3}, lg={'size':1}, align='center'
+                html.H6(id='average_value'), width={'size':2}, lg={'size':2}, align='center'
+                ),
+            dbc.Col(
+                html.H6('Select Dates:'), width=1, lg={'size':1},
                 ),
              dbc.Col(
-                 dbc.Button('Clear Selection', id='button-clear', n_clicks=0, color='success'),
-                 width={"size": 2, "offset": 0.2, "order": "last"},
+                dcc.DatePickerRange(
+                    id='date_range',
+                    min_date_allowed=data.Datetime.min(),
+                    max_date_allowed=data.Datetime.max(),
+                    initial_visible_month=data.Datetime.mean(),
+                    clearable=False,
+                    display_format='D.M.YYYY',
+                    ),
+                width={'size':3}, lg={'size':3, 'offset':0},
                  ),
-            ], style={'margin-bottom':5}, align='center',
+             dbc.Col(
+                 dbc.Button('Clear Selection', id='button-clear', n_clicks=0, color='success'),
+                 width={"size": 2, "offset": 0}, #, "order": "last"},
+                 ),
+             ], style={'margin-bottom':0, 'backgroundColor': '#2A3E4F', 'height':'100px'}, align='center', justify='around'
         ),
     dbc.Row(
         [
-            dbc.Col(graph_card, width=12, lg={'size': 6}),
-            dbc.Col(time_plots, width=12, lg={'size': 6}),
-            ]
+            dbc.Col(graph_card, width={'size':10, 'offset':1}, lg={'size': 10, 'offset':1}),
+            ], style={'backgroundColor':'#2A3E4F'}
+        ),
+    dbc.Row(
+            [
+                dbc.Col(time_plots, width={'size':10, 'offset':1}, lg={'size': 10, 'offset':1}),
+                ], style={'height':'32vh', 'backgroundColor':'#2A3E4F'}, align='center',
         )
-    ], style={'margin-left':30, 'margin-right':30}
+    ], style={'margin-left':0, 'margin-right':0, 'backgroundColor':'#1E2D39'}, fluid=True,
     )
 
 selectedTS_prev = None
@@ -194,13 +224,15 @@ selectedMap_prev = None
              ],
          [
              Input(component_id='slct_var', component_property='value'),
-             Input(component_id='date-slider', component_property='value'),
+             #Input(component_id='date-slider', component_property='value'),
+             Input(component_id='date_range', component_property='start_date'),
+             Input(component_id='date_range', component_property='end_date'),
              Input(component_id='map', component_property='selectedData'),
              Input('time-series', 'selectedData')
              ],
              )
 
-def update_figures(option_slctd, slider_value, selectedMap, selectedTS):
+def update_figures(option_slctd, start_date, end_date, selectedMap, selectedTS):
     global data
     global selectedTS_prev
     global selectedMap_prev
@@ -208,8 +240,14 @@ def update_figures(option_slctd, slider_value, selectedMap, selectedTS):
     dff = data.copy()
     selectedpoints = dff.index.values
     # Change in slider
-    mindate = dt.utcfromtimestamp(slider_value[0]*24*60)
-    maxdate = dt.utcfromtimestamp(slider_value[1]*24*60)
+    #mindate = dt.utcfromtimestamp(slider_value[0]*24*60)
+    #maxdate = dt.utcfromtimestamp(slider_value[1]*24*60)
+    if start_date is not None and end_date is not None:
+        mindate = dt.strptime(start_date, '%Y-%m-%d')
+        maxdate = dt.strptime(end_date, '%Y-%m-%d')
+    else:
+        mindate = dff.Datetime.min()
+        maxdate = dff.Datetime.max()
     minindex = dff.loc[dff['Datetime'] >= mindate, :].index.values[0]
     maxindex = dff.loc[dff['Datetime'] >= maxdate, :].index.values[0]
     if selectedMap is not None and selectedMap_prev != selectedMap:
@@ -225,7 +263,7 @@ def update_figures(option_slctd, slider_value, selectedMap, selectedTS):
     else:
         selectedpoints = selectedpoints[minindex:maxindex]
     colorscale, rev = colorscalesmap(option_slctd)
-    figmap = create_map2(dff, option_slctd, selectedpoints, colorscale, rev)
+    figmap = create_map(dff, option_slctd, selectedpoints, colorscale, rev)
     figtime = create_time_series(dff, option_slctd, selectedpoints, minindex, maxindex)
     sc = dff.iloc[selectedpoints][option_slctd]
     average = sc.mean()
@@ -255,7 +293,7 @@ def create_map(dff, option_slctd, selectedpoints, cscale, rev):# {{{
                 '<b>Longitude</b>: %{lon:.2f}°E'
                 '<br><b>Value</b>: %{customdata} %{meta}</br>',# }}}
             selectedpoints=selectedpoints,
-            marker=dict(size=15, opacity=0.7, color=sc, showscale=True, colorscale=cscale, reversescale=rev, colorbar=dict(title=unit, len=1), cmin=sc.iloc[selectedpoints].min(), cmid=vmean),
+            marker=dict(size=15, opacity=0.7, color=sc, showscale=True, colorscale=cscale, reversescale=rev, colorbar=dict(title=unit, len=1), cmid=vmean),
             unselected=dict(marker=dict(opacity=0.3, size=5, color='rgb(150,150,150)')),
               )# }}}
     mapbox = dict(# {{{
@@ -267,9 +305,11 @@ def create_map(dff, option_slctd, selectedpoints, cscale, rev):# {{{
         # we want the map to be "parallel" to our screen, with no angle
         pitch=0,
         # default level of zoom
-        zoom=2.0,
+        zoom=2.5,
         # default map style
-        style="carto-darkmatter" # "stamen-terrain" #"stamen-toner" #"stamen-watercolor" #"carto-darkmatter" #"carto-positron" #'stamen-terrain'
+
+        # style="carto-positron" # "stamen-terrain" #"stamen-toner" #"stamen-watercolor" #"carto-darkmatter" #"carto-positron" #'stamen-terrain'
+        style='mapbox://styles/ceordonezv/ckeiivabr4t9919qzavkja1mk'
         )# }}}
     # updatemenus=list([# {{{
     #     dict(# {{{
@@ -323,12 +363,35 @@ def create_map(dff, option_slctd, selectedpoints, cscale, rev):# {{{
     #            yanchor='top'
     #            )# }}}
     # ])# }}}
+    #fig.update_layout(
+    #    mapbox_style="white-bg",
+    #    mapbox_layers=[
+    #        {
+    #            "below": 'traces',
+    #            "sourcetype": "raster",
+    #            "source": [
+    #                "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}"
+    #            ]
+    #        }
+    #      ])
+    fig.add_trace(mapplot)
+    annotations = [dict(
+            x=1.1,
+            y=0.5,
+            text='Average',
+            yref='paper',
+            xref='paper',
+            showarrow=True,
+            ax=-35,
+            ay=0,
+            )]
     fig.update_layout(
             mapbox=mapbox,
             margin=dict(t=35, b=25),
             autosize=True,
+            uirevision='foo',
+            #annotations=annotations,
         )
-    fig.add_trace(mapplot)
     return fig# }}}
 def create_map2(dff, option_slctd, selectedpoints, cscale, rev):# {{{
 
@@ -367,7 +430,7 @@ def create_map2(dff, option_slctd, selectedpoints, cscale, rev):# {{{
             fitbounds='locations',
             scope='world',
             lonaxis=dict(showgrid=True),# range=[-60, 60]),
-            lataxis=dict(showgrid=True, dtick=5),# range=[50, 90]),
+            lataxis=dict(showgrid=True, dtick=5, range=[50, 90]),
             showsubunits=True,
             showcountries=True,
             showocean=True,
@@ -385,6 +448,7 @@ def create_map2(dff, option_slctd, selectedpoints, cscale, rev):# {{{
             height=800,
             width=800,
             autosize=True,
+            #yaxis=dict(scaleanchor='x',scaleratio=1),
             margin={"r":20,"t":30,"l":30,"b":20},
             )# }}}
     return fig# }}}
@@ -414,12 +478,14 @@ def title_timeseries(option_slctd, kind=None):# {{{
     elif option_slctd in ('ODO % sat'):
         title_timeseries = '%s saturation in the water' % namevar(option_slctd)
     if kind == 'map':
-        title_timeseries = 'Map of ' + title_timeseries
+        title_timeseries = title_timeseries
     return title_timeseries# }}}
 
 @app.callback(# {{{
         [
-            Output('date-slider', 'value'),
+            #Output('date-slider', 'value'),
+            Output('date_range', 'start_date'),
+            Output('date_range', 'end_date'),
             Output('map', 'selectedData'),
             Output('time-series', 'selectedData')
             ],
@@ -433,7 +499,9 @@ def update(reset):# {{{
     dff = data.copy()
     t0 = unix_time_millis(dff.Datetime.min())
     tf = unix_time_millis(dff.Datetime.max())
-    return [t0, tf], None, None# }}}
+    #return [t0, tf], None, None# }}}
+    return None, None, None, None# }}}
+
 def get_indexpoint(selectedMap):# {{{
     selectedpoint = []
     for point in selectedMap['points']:
