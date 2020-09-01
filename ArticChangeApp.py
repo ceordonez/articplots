@@ -110,7 +110,7 @@ graph_card = dbc.Card(# {{{
 time_plots = dbc.Card(
         [
             dbc.CardHeader(id='time_series_title'),#, className='card-title', style={'margin-left':5, 'margin-top':5}),
-            dcc.Graph(id='time-series', figure={}, responsive='auto', style={'height':'25vh'}),
+            dcc.Graph(id='time-series', figure={}, responsive='auto')#, style={'height':'25vh'}),
         ],
         color='secondary', inverse=False,
     )# }}}
@@ -535,6 +535,7 @@ def create_time_series(dff, option_slctd, selectedpoints, minindex, maxindex):
             '<br><b>Value</b>: %{customdata} %{meta}</br>')# }}}
     layout = dict(
             template='seaborn',
+            height=300,
             yaxis_title=' '.join([nameev, unit]),
             margin=dict(t=30, b=15, r=20, l=25),
             autosize=True,
