@@ -104,7 +104,7 @@ server = app.server
 graph_card = dbc.Card(# {{{
         [
             dbc.CardHeader(id='map_title'),#, className='card-title', style={'margin-left':5, 'margin-top':5}),
-            dcc.Graph(id='map', figure={}, responsive=True, style={'height': '85vh'}),
+            dcc.Graph(id='map', figure={}, responsive=True, style={'height': '75vh'}),
         ]
     )
 time_plots = dbc.Card(
@@ -188,7 +188,8 @@ app.layout = dbc.Container(
                         dbc.Col(graph_card, width={'size':10, 'offset':1}, lg={'size': 10, 'offset':1}),
                         ],# }}}
                     #style={'backgroundColor':None}, className='h-75'
-                    style={'backgroundColor':'#2A3E4F'}, className='h-75'
+                    #style={'backgroundColor':'#2A3E4F', 'height':'155px'}
+                    style={'backgroundColor':'#2A3E4F', 'height':'100%'}
                 ),
             dbc.Row([],
                     style={'backgroundColor':'#2A3E4F', 'height':'20px'},
@@ -198,7 +199,8 @@ app.layout = dbc.Container(
                         dbc.Col(time_plots, width={'size':10, 'offset':1}, lg={'size': 10, 'offset':1}),
                         ],# }}}
                     #style={'backgroundColor':None}, className='h-25'
-                    style={'backgroundColor':'#2A3E4F'}, className='h-25'
+                    #style={'backgroundColor':'#2A3E4F', 'height':'55px'},
+                    style={'backgroundColor':'#2A3E4F', 'height':'100%'},
                 )
         ],
         style={'margin-left':0, 'margin-right':0, 'backgroundColor':'#1E2D39', 'height':'100%'}, fluid=True,
@@ -247,14 +249,17 @@ def update_figures(option_slctd, start_date, end_date, selectedMap, selectedTS):
     maxindex = dff.loc[dff['Datetime'] >= maxdate, :].index.values[0]
     if selectedMap is not None and selectedMap_prev != selectedMap:
         selectedpoints = get_indexpoint(selectedMap)
-        minindex = dff.loc[selectedpoints].Datetime.index.values[0]
-        maxindex = dff.loc[selectedpoints].Datetime.index.values[-1]
-        selectedMap_prev = selectedMap
+        if selectedpoints:
+            minindex = dff.loc[selectedpoints].Datetime.index.values[0]
+            maxindex = dff.loc[selectedpoints].Datetime.index.values[-1]
+            selectedMap_prev = selectedMap
     elif selectedTS is not None and selectedTS_prev != selectedTS:
         selectedpoints = get_indexpoint(selectedTS)
-        minindex = dff.loc[selectedpoints].Datetime.index.values[0]
-        maxindex = dff.loc[selectedpoints].Datetime.index.values[-1]
-        selectedTS_prev = selectedTS
+        if selectedpoints:
+            print('toto')
+            minindex = dff.loc[selectedpoints].Datetime.index.values[0]
+            maxindex = dff.loc[selectedpoints].Datetime.index.values[-1]
+            selectedTS_prev = selectedTS
     else:
         selectedpoints = selectedpoints[minindex:maxindex]
     colorscale, rev = colorscalesmap(option_slctd)
@@ -267,11 +272,22 @@ def update_figures(option_slctd, start_date, end_date, selectedMap, selectedTS):
     title_Map = title_timeseries(option_slctd, 'map')
     return figmap, figtime, average_str, title_TS, title_Map
 
+def calc_zoom(min_lat, max_lat, min_lng, max_lng):
+
+    width_y = max_lat - min_lat
+    width_x = max_lng - min_lng
+    zoom_y = -1.446*np.log(width_y) + 7.2753
+    zoom_x = -1.415*np.log(width_x) + 8.7068
+    return min(round(zoom_y, 2), round(zoom_x, 2))
+
 def create_map(dff, option_slctd, selectedpoints, cscale, rev):# {{{
     unit = units(option_slctd)
     sc = dff[option_slctd]
     vmean = sc.iloc[selectedpoints].mean()
     nameev = namevar(option_slctd)
+    midlat = (1.15*dff.Latitude.max()+dff.Latitude.min())/2.
+    midlon = (dff.Longitude.max()+dff.Longitude.min())/2.
+    zoom = calc_zoom(dff.Latitude.min(), dff.Latitude.max(), dff.Longitude.min(), dff.Longitude.max())
     fig = go.Figure()
     mapplot = go.Scattermapbox(# {{{
             lat=dff.Latitude,
@@ -296,11 +312,11 @@ def create_map(dff, option_slctd, selectedpoints, cscale, rev):# {{{
         accesstoken=mapbox_access_token,
         bearing=0,
         # where we want the map to be centered
-        center=dict(lat=dff.Latitude.mean(), lon=dff.Longitude.mean()),
+        center=dict(lat=midlat, lon=midlon),
         # we want the map to be "parallel" to our screen, with no angle
         pitch=0,
         # default level of zoom
-        zoom=2.5,
+        zoom=zoom,
         # default map style
 
         # style="carto-positron" # "stamen-terrain" #"stamen-toner" #"stamen-watercolor" #"carto-darkmatter" #"carto-positron" #'stamen-terrain'
