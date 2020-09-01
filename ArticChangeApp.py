@@ -181,7 +181,7 @@ app.layout = dbc.Container(
                              ),
                          ],# }}}
                     #style={'margin-bottom':0, 'backgroundColor': None}, align='center', justify='around', className='h-25'
-                    style={'margin-bottom':0, 'backgroundColor': '#2A3E4F'}, align='center', justify='around', className='h-25'
+                    style={'margin-bottom':0, 'backgroundColor': '#2A3E4F', 'height':'90px'}, align='center', justify='around'
                 ),
             dbc.Row(
                     [# {{{
@@ -397,7 +397,7 @@ def create_map(dff, option_slctd, selectedpoints, cscale, rev):# {{{
             )]# }}}
     fig.update_layout(
             mapbox=mapbox,
-            height=800,
+            height=900,
             margin=dict(t=35, b=25),
             autosize=True,
             uirevision='foo',
@@ -463,7 +463,7 @@ def create_map2(dff, option_slctd, selectedpoints, cscale, rev):# {{{
             margin={"r":20,"t":30,"l":30,"b":20},
             )# }}}
     return fig# }}}
-def colorscalesmap(option_slctd):
+def colorscalesmap(option_slctd):# {{{
     if option_slctd == 'CH4d_ppm':
         colorscale = px.colors.diverging.Geyser
         rev = False
@@ -479,7 +479,7 @@ def colorscalesmap(option_slctd):
     elif option_slctd == 'ODO % sat':
         colorscale = px.colors.sequential.BuGn
         rev = False
-    return colorscale, rev
+    return colorscale, rev# }}}
 
 def title_timeseries(option_slctd, kind=None):# {{{
     if option_slctd in ('CH4d_ppm', 'CO2d_ppm'):
