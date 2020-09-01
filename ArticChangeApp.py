@@ -104,13 +104,13 @@ server = app.server
 graph_card = dbc.Card(# {{{
         [
             dbc.CardHeader(id='map_title'),#, className='card-title', style={'margin-left':5, 'margin-top':5}),
-            dcc.Graph(id='map', figure={}, responsive=True, style={'height': '75vh'}),
+            dcc.Graph(id='map', figure={}, responsive='auto')#, style={'height': '80vh'}),
         ]
     )
 time_plots = dbc.Card(
         [
             dbc.CardHeader(id='time_series_title'),#, className='card-title', style={'margin-left':5, 'margin-top':5}),
-            dcc.Graph(id='time-series', figure={}, responsive=True, style={'height':'25vh'}),
+            dcc.Graph(id='time-series', figure={}, responsive='auto', style={'height':'25vh'}),
         ],
         color='secondary', inverse=False,
     )# }}}
@@ -256,7 +256,6 @@ def update_figures(option_slctd, start_date, end_date, selectedMap, selectedTS):
     elif selectedTS is not None and selectedTS_prev != selectedTS:
         selectedpoints = get_indexpoint(selectedTS)
         if selectedpoints:
-            print('toto')
             minindex = dff.loc[selectedpoints].Datetime.index.values[0]
             maxindex = dff.loc[selectedpoints].Datetime.index.values[-1]
             selectedTS_prev = selectedTS
@@ -398,6 +397,7 @@ def create_map(dff, option_slctd, selectedpoints, cscale, rev):# {{{
             )]# }}}
     fig.update_layout(
             mapbox=mapbox,
+            height=800,
             margin=dict(t=35, b=25),
             autosize=True,
             uirevision='foo',
