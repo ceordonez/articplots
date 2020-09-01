@@ -117,118 +117,113 @@ time_plots = dbc.Card(
 
 #------------------------------------------------------------------
 # App layout
-cardmain = dbc.Card([
-        html.H4('Mauritius information'),
-        html.H6('Last location reported: ' + lastloc),
-        html.H6('Last date reported: ' + lastime),
-    ])
-app.layout = dbc.Container([
-        dbc.Row([
-            dbc.Col(
-                html.H2('Artic Expedition 2020-2024', style={'font-weight':'bold'}),
-                width={'size': 6, 'offset':0}, lg={'size':4, 'offset':1},#, style={'height':'10vh'}
-                ),
-            dbc.Col(
-                [
-                    html.H6('Last location reported: ' + lastloc, style={'text-align':'right'}),
-                    html.H6('Last date reported: ' + lastime, style={'text-align':'right'}),
-                    ],
-                width={'size':5, 'offset':1}, lg={'size':3, 'offset':3}, #style={'height':'10vh'}
-                ),
-            ], align='center', style={'height':'8vh'}
-            ),
-    # dbc.Row([
-    #     dbc.Col(html.H5('Select date'), width={'size':12}),
-    #     dbc.Col(
-    #         dcc.RangeSlider(
-    #             id='date-slider',
-    #             min=unix_time_millis(data.Datetime.min()),
-    #             max=unix_time_millis(data.Datetime.max()),
-    #             step=1,
-    #             value=[unix_time_millis(data.Datetime.min()),
-    #                 unix_time_millis(data.Datetime.max())],
-    #             marks=get_marks_from_start_end(data.Datetime.min(),
-    #                 data.Datetime.max())),
-    #         width={'size':10})
-    #     ], style={'margin-top':5}),
-    dbc.Row(
+app.layout = dbc.Container(
         [
-            dbc.Col(
-                html.H6('Select variable:'), width={'size':1}, lg={'size':1, 'offset':1}, align='center'),
-            dbc.Col(
-                dcc.Dropdown(id='slct_var',# {{{
-                     options=[
-                         {"label":"Carbon Dioxide", "value":'CO2d_ppm'},
-                         {"label":"Methane", "value":"CH4d_ppm"},
-                         {"label":"Temperature", "value":"Temp °C"},
-                         {"label":"Salinity", "value":'Sal psu'},
-                         {"label":"Oxygen saturation", "value":'ODO % sat'},
-                         ],
-                     multi=False,
-                     optionHeight=35,
-                     value='CO2d_ppm',
-                     searchable=True,
-                     placeholder='Please select...',
-                     style={'color': '#000000'},
-                     clearable=False,
-                     ),# }}}
-                width=3, lg={'size':2, 'offset':0},
+            dbc.Row(
+                [# {{{
+                    dbc.Col(
+                        html.H2('Artic Expedition 2020-2024', style={'font-weight':'bold'}),
+                        width={'size': 6, 'offset':0}, xl={'size':5, 'offset':1}, #style={'height':'100%'}
+                        ),
+                    dbc.Col(
+                        [
+                            html.H6('Last location reported: ' + lastloc, style={'text-align':'right'}),
+                            html.H6('Last date reported: ' + lastime, style={'text-align':'right'}),
+                            ],
+                        width={'size':5, 'offset':1}, xl={'size':4, 'offset':1}, #style={'height':'100%', 'background-color':'green'}
+                        ),
+                ],# }}}
+                align='center', className='h-25',
                 ),
-            dbc.Col(
-                html.H6(id='average_value'), width={'size':2}, lg={'size':2}, align='center'
+            dbc.Row(
+                    [# {{{
+                        dbc.Col(
+                            html.H6('Select variable:'), width={'size':1}, lg={'size':1, 'offset':1}, align='center'),
+                        dbc.Col(
+                            dcc.Dropdown(id='slct_var',# {{{
+                                 options=[
+                                     {"label":"Carbon Dioxide", "value":'CO2d_ppm'},
+                                     {"label":"Methane", "value":"CH4d_ppm"},
+                                     {"label":"Temperature", "value":"Temp °C"},
+                                     {"label":"Salinity", "value":'Sal psu'},
+                                     {"label":"Oxygen saturation", "value":'ODO % sat'},
+                                     ],
+                                 multi=False,
+                                 optionHeight=35,
+                                 value='CO2d_ppm',
+                                 searchable=True,
+                                 placeholder='Please select...',
+                                 style={'color': '#000000'},
+                                 clearable=False,
+                                 ),# }}}
+                            width=3, lg={'size':2, 'offset':0},
+                            ),
+                        dbc.Col(
+                            html.H6(id='average_value'), width={'size':2}, lg={'size':2}, align='center'
+                            ),
+                        dbc.Col(
+                            html.H6('Select Dates:'), width=1, lg={'size':1},
+                            ),
+                         dbc.Col(
+                            dcc.DatePickerRange(# {{{
+                                id='date_range',
+                                min_date_allowed=data.Datetime.min(),
+                                max_date_allowed=data.Datetime.max(),
+                                initial_visible_month=data.Datetime.mean(),
+                                clearable=False,
+                                display_format='D.M.YYYY',
+                                ),# }}}
+                            width={'size':3}, lg={'size':3, 'offset':0},
+                             ),
+                         dbc.Col(
+                             dbc.Button('Clear Selection', id='button-clear', n_clicks=0, color='success'),
+                             width={"size": 2, "offset": 0}, #, "order": "last"},
+                             ),
+                         ],# }}}
+                    #style={'margin-bottom':0, 'backgroundColor': None}, align='center', justify='around', className='h-25'
+                    style={'margin-bottom':0, 'backgroundColor': '#2A3E4F'}, align='center', justify='around', className='h-25'
                 ),
-            dbc.Col(
-                html.H6('Select Dates:'), width=1, lg={'size':1},
+            dbc.Row(
+                    [# {{{
+                        dbc.Col(graph_card, width={'size':10, 'offset':1}, lg={'size': 10, 'offset':1}),
+                        ],# }}}
+                    #style={'backgroundColor':None}, className='h-75'
+                    style={'backgroundColor':'#2A3E4F'}, className='h-75'
                 ),
-             dbc.Col(
-                dcc.DatePickerRange(
-                    id='date_range',
-                    min_date_allowed=data.Datetime.min(),
-                    max_date_allowed=data.Datetime.max(),
-                    initial_visible_month=data.Datetime.mean(),
-                    clearable=False,
-                    display_format='D.M.YYYY',
-                    ),
-                width={'size':3}, lg={'size':3, 'offset':0},
-                 ),
-             dbc.Col(
-                 dbc.Button('Clear Selection', id='button-clear', n_clicks=0, color='success'),
-                 width={"size": 2, "offset": 0}, #, "order": "last"},
-                 ),
-             ], style={'margin-bottom':0, 'backgroundColor': '#2A3E4F', 'height':'100px'}, align='center', justify='around'
-        ),
-    dbc.Row(
-        [
-            dbc.Col(graph_card, width={'size':10, 'offset':1}, lg={'size': 10, 'offset':1}),
-            ], style={'backgroundColor':'#2A3E4F'}
-        ),
-    dbc.Row(
-            [
-                dbc.Col(time_plots, width={'size':10, 'offset':1}, lg={'size': 10, 'offset':1}),
-                ], style={'height':'32vh', 'backgroundColor':'#2A3E4F'}, align='center',
-        )
-    ], style={'margin-left':0, 'margin-right':0, 'backgroundColor':'#1E2D39'}, fluid=True,
+            dbc.Row([],
+                    style={'backgroundColor':'#2A3E4F', 'height':'20px'},
+                ),
+            dbc.Row(
+                    [# {{{
+                        dbc.Col(time_plots, width={'size':10, 'offset':1}, lg={'size': 10, 'offset':1}),
+                        ],# }}}
+                    #style={'backgroundColor':None}, className='h-25'
+                    style={'backgroundColor':'#2A3E4F'}, className='h-25'
+                )
+        ],
+        style={'margin-left':0, 'margin-right':0, 'backgroundColor':'#1E2D39', 'height':'100%'}, fluid=True,
+        #style={'margin-left':0, 'margin-right':0, 'backgroundColor':'#1E2D39', 'height':'40vh'}, fluid=True,
     )
 
-selectedTS_prev = None
-selectedMap_prev = None
 #------------------------------------------------------------------
 # Connect Plotly with Dash Components
+selectedTS_prev = None
+selectedMap_prev = None
 @app.callback(
          [
-             Output(component_id='map', component_property='figure'),
+             Output(component_id='map', component_property='figure'),# {{{
              Output(component_id='time-series', component_property='figure'),
              Output(component_id='average_value', component_property='children'),
              Output(component_id='time_series_title', component_property='children'),
-             Output(component_id='map_title', component_property='children'),
+             Output(component_id='map_title', component_property='children'),# }}}
              ],
          [
-             Input(component_id='slct_var', component_property='value'),
+             Input(component_id='slct_var', component_property='value'),# {{{
              #Input(component_id='date-slider', component_property='value'),
              Input(component_id='date_range', component_property='start_date'),
              Input(component_id='date_range', component_property='end_date'),
              Input(component_id='map', component_property='selectedData'),
-             Input('time-series', 'selectedData')
+             Input('time-series', 'selectedData')# }}}
              ],
              )
 
@@ -375,7 +370,7 @@ def create_map(dff, option_slctd, selectedpoints, cscale, rev):# {{{
     #        }
     #      ])
     fig.add_trace(mapplot)
-    annotations = [dict(
+    annotations = [dict(# {{{
             x=1.1,
             y=0.5,
             text='Average',
@@ -384,7 +379,7 @@ def create_map(dff, option_slctd, selectedpoints, cscale, rev):# {{{
             showarrow=True,
             ax=-35,
             ay=0,
-            )]
+            )]# }}}
     fig.update_layout(
             mapbox=mapbox,
             margin=dict(t=35, b=25),
