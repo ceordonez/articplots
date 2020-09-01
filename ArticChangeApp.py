@@ -119,6 +119,7 @@ time_plots = dbc.Card(
 # App layout
 app.layout = dbc.Container(
         [
+            dbc.Row([], style={'height':'1vh'}),
             dbc.Row(
                 [# {{{
                     dbc.Col(
@@ -135,6 +136,8 @@ app.layout = dbc.Container(
                 ],# }}}
                 align='center', className='h-25',
                 ),
+            dbc.Row([], style={'height':'1vh'}),
+            dbc.Row([], style={'backgroundColor': '#2A3E4F', 'height':'2vh'}),
             dbc.Row(
                     [# {{{
                         dbc.Col(
@@ -181,8 +184,9 @@ app.layout = dbc.Container(
                              ),
                          ],# }}}
                     #style={'margin-bottom':0, 'backgroundColor': None}, align='center', justify='around', className='h-25'
-                    style={'margin-bottom':0, 'backgroundColor': '#2A3E4F', 'height':'90px'}, align='center', justify='around'
+                    style={'margin-bottom':0, 'backgroundColor': '#2A3E4F'}, align='center', justify='around'
                 ),
+            dbc.Row([], style={'backgroundColor': '#2A3E4F', 'height':'2vh'}),
             dbc.Row(
                     [# {{{
                         dbc.Col(graph_card, width={'size':10, 'offset':1}, lg={'size': 10, 'offset':1}),
@@ -192,7 +196,7 @@ app.layout = dbc.Container(
                     style={'backgroundColor':'#2A3E4F', 'height':'100%'}
                 ),
             dbc.Row([],
-                    style={'backgroundColor':'#2A3E4F', 'height':'20px'},
+                    style={'backgroundColor':'#2A3E4F', 'height':'2vh'},
                 ),
             dbc.Row(
                     [# {{{
