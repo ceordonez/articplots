@@ -19,8 +19,9 @@ from dash.dependencies import Input, Output, State
 data = pd.read_csv('others/AllData.csv', parse_dates=[1], index_col=[0])
 data = data.set_index('Datetime')
 #data = data.resample('1440T').mean()
-#data = data.resample('240T').mean()
 data = data.resample('720T').mean()
+#data = data.resample('240T').mean()
+#data = data.resample('60T').mean()
 data = data.reset_index()
 data['Date'] = data['Datetime'].dt.strftime('%d-%m-%y %H:%M')
 data['CH4'] = data['CH4d_ppm'].round(2).astype(str)
@@ -119,11 +120,12 @@ time_plots = dbc.Card(
 # App layout
 app.layout = dbc.Container(
         [
+
             dbc.Row([], style={'height':'1vh'}),
             dbc.Row(
                 [# {{{
                     dbc.Col(
-                        html.H2('Artic Expedition 2020-2024', style={'font-weight':'bold'}),
+                        html.H2('Arctic Expedition 2020-2024', style={'font-weight':'bold'}),
                         width={'size': 6, 'offset':0}, xl={'size':5, 'offset':1}, #style={'height':'100%'}
                         ),
                     dbc.Col(
@@ -139,52 +141,72 @@ app.layout = dbc.Container(
             dbc.Row([], style={'height':'1vh'}),
             dbc.Row([], style={'backgroundColor': '#2A3E4F', 'height':'2vh'}),
             dbc.Row(
-                    [# {{{
-                        dbc.Col(
-                            html.H6('Select variable:'), width={'size':1}, lg={'size':1, 'offset':1}, align='center'),
-                        dbc.Col(
-                            dcc.Dropdown(id='slct_var',# {{{
-                                 options=[
-                                     {"label":"Carbon Dioxide", "value":'CO2d_ppm'},
-                                     {"label":"Methane", "value":"CH4d_ppm"},
-                                     {"label":"Temperature", "value":"Temp °C"},
-                                     {"label":"Salinity", "value":'Sal psu'},
-                                     {"label":"Oxygen saturation", "value":'ODO % sat'},
-                                     ],
-                                 multi=False,
-                                 optionHeight=35,
-                                 value='CO2d_ppm',
-                                 searchable=True,
-                                 placeholder='Please select...',
-                                 style={'color': '#000000'},
-                                 clearable=False,
-                                 ),# }}}
-                            width=3, lg={'size':2, 'offset':0},
-                            ),
-                        dbc.Col(
-                            html.H6(id='average_value'), width={'size':2}, lg={'size':2}, align='center'
-                            ),
-                        dbc.Col(
-                            html.H6('Select Dates:'), width=1, lg={'size':1},
-                            ),
-                         dbc.Col(
-                            dcc.DatePickerRange(# {{{
-                                id='date_range',
-                                min_date_allowed=data.Datetime.min(),
-                                max_date_allowed=data.Datetime.max(),
-                                initial_visible_month=data.Datetime.mean(),
+                [
+                    dbc.Col(
+                        [
+                            html.H6('Select variable:'),
+                            dcc.Dropdown(
+                                id='slct_var',# {{{
+                                options=[
+                                    {"label":"Carbon Dioxide", "value":'CO2d_ppm'},
+                                    {"label":"Methane", "value":"CH4d_ppm"},
+                                    {"label":"Temperature", "value":"Temp °C"},
+                                    {"label":"Salinity", "value":'Sal psu'},
+                                    {"label":"Oxygen saturation", "value":'ODO % sat'},
+                                    ],
+                                multi=False,
+                                optionHeight=35,
+                                value='CO2d_ppm',
+                                searchable=True,
+                                placeholder='Please select...',
+                                style={'color': '#000000'},
                                 clearable=False,
-                                display_format='D.M.YYYY',
                                 ),# }}}
-                            width={'size':3}, lg={'size':3, 'offset':0},
-                             ),
-                         dbc.Col(
-                             dbc.Button('Clear Selection', id='button-clear', n_clicks=0, color='success'),
-                             width={"size": 2, "offset": 0}, #, "order": "last"},
-                             ),
-                         ],# }}}
+                            ],
+                        width=3,
+                        lg={'size':2, 'offset':1},
+                        ),
+                    dbc.Col(
+                        html.H6(id='average_value'),
+                        width={'size':2},
+                        lg={'size':1},
+                        align='center'
+                        ),
+                    dbc.Col(
+                        [
+                             dbc.Row(
+                                 [
+                                     dbc.Col(
+                                         [
+                                             html.H6('Select dates:'),
+                                             dcc.DatePickerRange(# {{{
+                                                 id='date_range',
+                                                 min_date_allowed=data.Datetime.min(),
+                                                 max_date_allowed=data.Datetime.max(),
+                                                 initial_visible_month=data.Datetime.mean(),
+                                                 clearable=False,
+                                                 display_format='D.M.YYYY',
+                                                 ),# }}}
+                                             ],
+                                         width=8,
+                                         lg={'size':7, 'offset':1},
+                                         #style={'backgroundColor':'red'}
+                                         ),
+                                     dbc.Col(
+                                         dbc.Button('Clear selection', id='button-clear', n_clicks=0, color='success', style={'padding-left':2, 'padding-right':2}),
+                                         width={'size':4, 'offset':0},
+                                         lg={'size':3, 'offset':0},
+                                         #style={'backgroundColor':'blue'}
+                                         )
+                                    ],
+                                 align='center')
+                             ],
+                        width={'size':7, 'offset':0},
+                        lg={'size':4, 'offset':1},
+                        ),
+                    ],
                     #style={'margin-bottom':0, 'backgroundColor': None}, align='center', justify='around', className='h-25'
-                    style={'margin-bottom':0, 'backgroundColor': '#2A3E4F'}, align='center', justify='around'
+                    style={'margin-bottom':0, 'backgroundColor': '#2A3E4F'}, align='center', #justify='around'
                 ),
             dbc.Row([], style={'backgroundColor': '#2A3E4F', 'height':'2vh'}),
             dbc.Row(
@@ -202,9 +224,10 @@ app.layout = dbc.Container(
                     [# {{{
                         dbc.Col(time_plots, width={'size':10, 'offset':1}, lg={'size': 10, 'offset':1}),
                         ],# }}}
-                    #style={'backgroundColor':None}, className='h-25'
-                    #style={'backgroundColor':'#2A3E4F', 'height':'55px'},
                     style={'backgroundColor':'#2A3E4F', 'height':'100%'},
+                ),
+            dbc.Row([],
+                    style={'backgroundColor':'#2A3E4F', 'height':'2vh'},
                 )
         ],
         style={'margin-left':0, 'margin-right':0, 'backgroundColor':'#1E2D39', 'height':'100%'}, fluid=True,
@@ -487,11 +510,11 @@ def colorscalesmap(option_slctd):# {{{
 
 def title_timeseries(option_slctd, kind=None):# {{{
     if option_slctd in ('CH4d_ppm', 'CO2d_ppm'):
-        title_timeseries = '%s concentration in the atmosphere' % (namevar(option_slctd))
+        title_timeseries = '%s concentration in the atmosphere %s' % (namevar(option_slctd), units(option_slctd))
     elif option_slctd in ('Sal psu', 'Temp °C'):
-        title_timeseries = 'Water %s' % namevar(option_slctd).lower()
+        title_timeseries = 'Water %s %s' % (namevar(option_slctd).lower(), units(option_slctd))
     elif option_slctd in ('ODO % sat'):
-        title_timeseries = '%s saturation in the water' % namevar(option_slctd)
+        title_timeseries = '%s saturation in the water %s ' % (namevar(option_slctd), units(option_slctd))
     if kind == 'map':
         title_timeseries = title_timeseries
     return title_timeseries# }}}
