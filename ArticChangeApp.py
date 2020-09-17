@@ -21,6 +21,7 @@ data = data.set_index('Datetime')
 data = data.resample('720T').mean()
 data = data[:'24-08-2020']
 data = data.reset_index()
+data['CH4d_ppm'] = data['CH4d_ppm'] + 0.8
 data['Date'] = data['Datetime'].dt.strftime('%d-%m-%y %H:%M')
 data['CH4'] = data['CH4d_ppm'].round(2).astype(str)
 data['Temperature'] = data['Temp °C'].round(2).astype(str)
@@ -33,7 +34,6 @@ data['Specific Conductivity \U0001D725\u2082\u2085'] = data['SpCond µS/cm'].rou
 mapbox_access_token = open(".mapbox_token").read()
 lastloc = '%.2f°N, %.2f°E'  % (data['Latitude'].iloc[-1], data['Longitude'].iloc[-1])
 lastime = data['Date'].iloc[-1]
-print(data.columns)
 
 epoch = dt.utcfromtimestamp(0)
 
@@ -696,4 +696,4 @@ def update_graph(option_slctd, mindate, maxdate, selectedMap, selectedTS, btncle
 #          Input(component_id='button-clear', component_property='n_clicks')])}}}
 #------------------------------------------------------------------
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(debug=False)
