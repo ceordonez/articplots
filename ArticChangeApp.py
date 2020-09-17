@@ -326,6 +326,10 @@ def create_map(dff, option_slctd, selectedpoints, cscale, rev):# {{{
     unit = units(option_slctd)
     sc = dff[option_slctd]
     vmean = sc.iloc[selectedpoints].mean()
+    if option_slctd == 'Turbidity FNU':
+        markers = dict(size=15, opacity=0.7, color=sc, showscale=True, colorscale=cscale, reversescale=rev, colorbar=dict(title=unit, len=1), cmin=sc.iloc[selectedpoints].min())
+    else:
+        markers = dict(size=15, opacity=0.7, color=sc, showscale=True, colorscale=cscale, reversescale=rev, colorbar=dict(title=unit, len=1), cmid=vmean)
     nameev = namevar(option_slctd)
     midlat = (1.15*dff.Latitude.max()+dff.Latitude.min())/2.
     midlon = (dff.Longitude.max()+dff.Longitude.min())/2.
@@ -346,7 +350,7 @@ def create_map(dff, option_slctd, selectedpoints, cscale, rev):# {{{
                 '<b>Longitude</b>: %{lon:.2f}°E'
                 '<br><b>Value</b>: %{customdata} %{meta}</br>',# }}}
             selectedpoints=selectedpoints,
-            marker=dict(size=15, opacity=0.7, color=sc, showscale=True, colorscale=cscale, reversescale=rev, colorbar=dict(title=unit, len=1), cmid=vmean),
+            marker=markers,
             unselected=dict(marker=dict(opacity=0.3, size=5, color='rgb(150,150,150)')),
               )# }}}
     mapbox = dict(# {{{
@@ -696,4 +700,4 @@ def update_graph(option_slctd, mindate, maxdate, selectedMap, selectedTS, btncle
 #          Input(component_id='button-clear', component_property='n_clicks')])}}}
 #------------------------------------------------------------------
 if __name__ == "__main__":
-    app.run_server(debug=False)
+    app.run_server(debug=True)
