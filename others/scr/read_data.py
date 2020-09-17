@@ -26,13 +26,13 @@ def read_data(path_zipdata, path_unzipdata):
     """# }}}
 
     # if there are new data in path_zipdata
-    if len(dircmp(path_zipdata, path_unzipdata).left_only) > 0:
-        logging.info('Unzipping data in: %s', path_unzipdata)
-        uncompress_data(path_zipdata, path_unzipdata)
-    else:
-        now = datetime.now()
-        logging.info('There are not new data on: %s',
-                now.strftime('%d-%m-%Y %H:%M'))
+    # if len(dircmp(path_zipdata, path_unzipdata).left_only) > 0:
+    #     logging.info('Unzipping data in: %s', path_unzipdata)
+    #     uncompress_data(path_zipdata, path_unzipdata)
+    # else:
+    #     now = datetime.now()
+    #     logging.info('There are not new data on: %s',
+    #             now.strftime('%d-%m-%Y %H:%M'))
 
     logging.info('Reading LGR data')
     # TODO: CHECK IF FILES EXIST!!
@@ -131,18 +131,22 @@ def read_gps(path_unzipdata):# {{{
         try:
             gpsfolder = gpsfolder[0]
         except IndexError:
-            logging.warning('YB folder does not found in: %s', datefolder_path)
+            logging.warning('GPS folder does not found in: %s', datefolder_path)
             continue
         gpsfolder_path = os.path.join(datefolder_path, gpsfolder)
         for gpsfile in os.listdir(gpsfolder_path):
+            logging.info('Reading file: %s' % gpsfile)
             gpxfile = open(os.path.join(gpsfolder_path, gpsfile), 'r')
             gpx = gpxpy.parse(gpxfile)
             for track in gpx.tracks:
                 for segment in track.segments:
                     for point in segment.points:
-                        time.append(point.time.replace(tzinfo=None))
-                        lat.append(point.latitude)
-                        lon.append(point.longitude)
+                        try:
+                            time.append(point.time.replace(tzinfo=None))
+                            lat.append(point.latitude)
+                            lon.append(point.longitude)
+                        except Exception:
+                            logging.warning('GPS point without time value: lat %.1f lon %.1f' % (point.latitude, point.longitude))
     d = {'Datetime': time, 'Latitude': lat, 'Longitude': lon}
     data = pd.DataFrame(data=d)
     data = data.set_index('Datetime')
@@ -184,7 +188,7 @@ def read_lgr(newpath):# {{{
     i = 0
     for alldata in os.listdir(newpath):
         allfiles = os.path.join(newpath, alldata)
-        LGRfolderdata = [x for x in os.listdir(allfiles) if any(s in x for s in ('YB', 'GHG'))]
+        LGRfolderdata = [x for x in os.listdir(allfiles) if any(s in x for s in ('YB', 'AtmGHG', 'atmGHG'))]
         try:
             LGRfolderdata = LGRfolderdata[0]
         except IndexError:

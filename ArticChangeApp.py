@@ -18,10 +18,8 @@ from dash.dependencies import Input, Output, State
 # Read data
 data = pd.read_csv('others/AllData.csv', parse_dates=[1], index_col=[0])
 data = data.set_index('Datetime')
-#data = data.resample('1440T').mean()
 data = data.resample('720T').mean()
-#data = data.resample('240T').mean()
-#data = data.resample('60T').mean()
+data = data[:'24-08-2020']
 data = data.reset_index()
 data['Date'] = data['Datetime'].dt.strftime('%d-%m-%y %H:%M')
 data['CH4'] = data['CH4d_ppm'].round(2).astype(str)
@@ -29,10 +27,13 @@ data['Temperature'] = data['Temp °C'].round(2).astype(str)
 data['Salinity'] = data['Sal psu'].round(2).astype(str)
 data['CO2'] = data['CO2d_ppm'].round(1).astype(str)
 data['Oxygen'] = data['ODO % sat'].round(1).astype(str)
+data['Turbidity'] = data['Turbidity FNU'].round(1).astype(str)
+data['Specific Conductivity \U0001D725\u2082\u2085'] = data['SpCond µS/cm'].round(1).astype(str)
+
 mapbox_access_token = open(".mapbox_token").read()
 lastloc = '%.2f°N, %.2f°E'  % (data['Latitude'].iloc[-1], data['Longitude'].iloc[-1])
 lastime = data['Date'].iloc[-1]
-#print(data.columns)
+print(data.columns)
 
 epoch = dt.utcfromtimestamp(0)
 
@@ -153,6 +154,8 @@ app.layout = dbc.Container(
                                     {"label":"Temperature", "value":"Temp °C"},
                                     {"label":"Salinity", "value":'Sal psu'},
                                     {"label":"Oxygen saturation", "value":'ODO % sat'},
+                                    {"label":"Turbidity", "value":'Turbidity FNU'},
+                                    {"label":"Specific Conductivity", "value":'SpCond µS/cm'},
                                     ],
                                 multi=False,
                                 optionHeight=35,
@@ -228,7 +231,20 @@ app.layout = dbc.Container(
                 ),
             dbc.Row([],
                     style={'backgroundColor':'#2A3E4F', 'height':'2vh'},
-                )
+                ),
+            dbc.Row(
+                    [
+                        dbc.Col(
+                            dbc.CardImg(src='/assets/AQUATIC_PHYSICS-Narrow-rgb_whiteletters.png', style={'width':'100%'}),
+                            width={'offset':4, 'size':4},
+                            lg={'offset':5, 'size':2}
+                            )
+                        ],
+                    style={'backgroundColor':'#2A3E4F'}, align='center',
+                ),
+            dbc.Row([],
+                    style={'backgroundColor':'#2A3E4F', 'height':'2vh'},
+                ),
         ],
         style={'margin-left':0, 'margin-right':0, 'backgroundColor':'#1E2D39', 'height':'100%'}, fluid=True,
         #style={'margin-left':0, 'margin-right':0, 'backgroundColor':'#1E2D39', 'height':'40vh'}, fluid=True,
@@ -286,8 +302,8 @@ def update_figures(option_slctd, start_date, end_date, selectedMap, selectedTS):
             minindex = dff.loc[selectedpoints].Datetime.index.values[0]
             maxindex = dff.loc[selectedpoints].Datetime.index.values[-1]
             selectedTS_prev = selectedTS
-    else:
-        selectedpoints = selectedpoints[minindex:maxindex]
+    # else:
+    #     selectedpoints = selectedpoints[minindex:maxindex]
     colorscale, rev = colorscalesmap(option_slctd)
     figmap = create_map(dff, option_slctd, selectedpoints, colorscale, rev)
     figtime = create_time_series(dff, option_slctd, selectedpoints, minindex, maxindex)
@@ -506,17 +522,25 @@ def colorscalesmap(option_slctd):# {{{
     elif option_slctd == 'ODO % sat':
         colorscale = px.colors.sequential.BuGn
         rev = False
+    elif option_slctd == 'Turbidity FNU':
+        colorscale = px.colors.sequential.Viridis
+        rev = True
+    elif option_slctd == 'SpCond µS/cm':
+        colorscale = px.colors.sequential.OrRd
+        rev = False
     return colorscale, rev# }}}
 
 def title_timeseries(option_slctd, kind=None):# {{{
     if option_slctd in ('CH4d_ppm', 'CO2d_ppm'):
         title_timeseries = '%s concentration in the atmosphere %s' % (namevar(option_slctd), units(option_slctd))
-    elif option_slctd in ('Sal psu', 'Temp °C'):
+    elif option_slctd in ('Sal psu', 'Temp °C', 'SpCond µS/cm', 'Turbidity FNU'):
         title_timeseries = 'Water %s %s' % (namevar(option_slctd).lower(), units(option_slctd))
     elif option_slctd in ('ODO % sat'):
         title_timeseries = '%s saturation in the water %s ' % (namevar(option_slctd), units(option_slctd))
-    if kind == 'map':
-        title_timeseries = title_timeseries
+   # elif option_slctd in ('Turbidity FNU'):
+   #     title_timeseries = '%s in the water %s' % (namevar(option_slctd), units(option_slctd))
+   # elif option_slctd in ('Cond µS/cm'):
+   #     title_timeseries = '%s in the water %s' % name
     return title_timeseries# }}}
 
 @app.callback(# {{{
@@ -581,6 +605,10 @@ def namevar(option_slctd):# {{{
         nameev = 'Temperature'
     elif 'ODO % sat' in option_slctd:
         nameev = 'Oxygen'
+    elif 'Turbidity FNU' in option_slctd:
+        nameev = 'Turbidity'
+    elif 'SpCond µS/cm' in option_slctd:
+        nameev = 'Specific Conductivity \U0001D725\u2082\u2085'
     return nameev# }}}
 
 def units(option_slctd):# {{{
@@ -593,6 +621,10 @@ def units(option_slctd):# {{{
         units = '(psu)'
     elif 'ODO' in option_slctd:
         units = '(%)'
+    elif 'Turbidity' in option_slctd:
+        units = '(FNU)'
+    elif 'SpCond' in option_slctd:
+        units = '(µS/cm)'
     return units# }}}
 
 def update_graph(option_slctd, mindate, maxdate, selectedMap, selectedTS, btnclear):# {{{
