@@ -21,7 +21,7 @@ data = data.set_index('Datetime')
 data = data.resample('720T').mean()
 data = data[:'24-08-2020']
 data = data.reset_index()
-data['CH4d_ppm'] = data['CH4d_ppm'] + 0.8
+data['CH4d_ppm'] = data['CH4d_ppm']
 data['Date'] = data['Datetime'].dt.strftime('%d-%m-%y %H:%M')
 data['CH4'] = data['CH4d_ppm'].round(2).astype(str)
 data['Temperature'] = data['Temp °C'].round(2).astype(str)
@@ -150,12 +150,12 @@ app.layout = dbc.Container(
                                 id='slct_var',# {{{
                                 options=[
                                     {"label":"Carbon Dioxide", "value":'CO2d_ppm'},
-                                    {"label":"Methane", "value":"CH4d_ppm"},
                                     {"label":"Temperature", "value":"Temp °C"},
                                     {"label":"Salinity", "value":'Sal psu'},
                                     {"label":"Oxygen saturation", "value":'ODO % sat'},
                                     {"label":"Turbidity", "value":'Turbidity FNU'},
                                     {"label":"Specific Conductivity", "value":'SpCond µS/cm'},
+                                    # {"label":"Methane", "value":"CH4d_ppm"},
                                     ],
                                 multi=False,
                                 optionHeight=35,
