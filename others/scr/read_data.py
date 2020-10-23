@@ -67,21 +67,22 @@ def read_exo(path_unzipdata):# {{{
     data = []
     for datefile in allfiles:
         datefile_path = os.path.join(path_unzipdata, datefile)
-        exofile = [x for x in os.listdir(datefile_path) if ".csv" in x][0]
-        exofile_path = os.path.join(datefile_path, exofile)
-        logging.info('Reading file: %s' % exofile_path)
-        try:
-            exodata = pd.read_csv(exofile_path, sep=',', encoding='utf-16', skiprows=9)
-        except Exception:
-            exodata = pd.read_csv(exofile_path, sep=',', encoding='utf-8', skiprows=8)
-        exodata = exodata.dropna()
-        exodata = exodata.set_index('Date (MM/DD/YYYY)')
-        if 'Date (MM/DD/YYYY)' in exodata.index.values:
-            exodata = exodata.drop('Date (MM/DD/YYYY)', axis=0)
-        exodata = exodata.reset_index()
-        exodata['Datetime'] = pd.to_datetime(exodata['Date (MM/DD/YYYY)'] + ' ' + exodata['Time (HH:mm:ss)'], format='%m/%d/%Y %H:%M:%S')
-        data = append_pddata(i, data, exodata)
-        i += 1
+        exofiles = [x for x in os.listdir(datefile_path) if ".csv" in x]
+        for exofile in exofiles:
+            exofile_path = os.path.join(datefile_path, exofile)
+            logging.info('Reading file: %s' % exofile_path)
+            try:
+                exodata = pd.read_csv(exofile_path, sep=',', encoding='utf-16', skiprows=9)
+            except Exception:
+                exodata = pd.read_csv(exofile_path, sep=',', encoding='utf-8', skiprows=8)
+            exodata = exodata.dropna()
+            exodata = exodata.set_index('Date (MM/DD/YYYY)')
+            if 'Date (MM/DD/YYYY)' in exodata.index.values:
+                exodata = exodata.drop('Date (MM/DD/YYYY)', axis=0)
+            exodata = exodata.reset_index()
+            exodata['Datetime'] = pd.to_datetime(exodata['Date (MM/DD/YYYY)'] + ' ' + exodata['Time (HH:mm:ss)'], format='%m/%d/%Y %H:%M:%S')
+            data = append_pddata(i, data, exodata)
+            i += 1
     data = data.drop(['Site Name', 'Date (MM/DD/YYYY)', 'Time (HH:mm:ss)'], axis=1)
     data = data.set_index('Datetime')
     data = data.sort_index()

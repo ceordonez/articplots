@@ -121,12 +121,11 @@ time_plots = dbc.Card(
 # App layout
 app.layout = dbc.Container(
         [
-
             dbc.Row([], style={'height':'1vh'}),
             dbc.Row(
                 [# {{{
                     dbc.Col(
-                        html.H2('Arctic Expedition 2020-2024', style={'font-weight':'bold'}),
+                        html.H2('The Arctic Expedition 2020-2024', style={'font-weight':'bold'}),
                         width={'size': 6, 'offset':0}, xl={'size':5, 'offset':1}, #style={'height':'100%'}
                         ),
                     dbc.Col(
