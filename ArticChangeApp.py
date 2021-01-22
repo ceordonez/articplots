@@ -288,7 +288,7 @@ def update_figures(option_slctd, start_date, end_date, selectedMap, selectedTS):
         mindate = dff.Datetime.min()
         maxdate = dff.Datetime.max()
     minindex = dff.loc[dff['Datetime'] >= mindate, :].index.values[0]
-    maxindex = dff.loc[dff['Datetime'] >= maxdate, :].index.values[0]
+    maxindex = dff.loc[dff['Datetime'] <= maxdate, :].index.values[-1]
     if selectedMap is not None and selectedMap_prev != selectedMap:
         selectedpoints = get_indexpoint(selectedMap)
         if selectedpoints:
@@ -301,8 +301,8 @@ def update_figures(option_slctd, start_date, end_date, selectedMap, selectedTS):
             minindex = dff.loc[selectedpoints].Datetime.index.values[0]
             maxindex = dff.loc[selectedpoints].Datetime.index.values[-1]
             selectedTS_prev = selectedTS
-    # else:
-    #     selectedpoints = selectedpoints[minindex:maxindex]
+    else:
+        selectedpoints = selectedpoints[minindex:maxindex+1]
     colorscale, rev = colorscalesmap(option_slctd)
     figmap = create_map(dff, option_slctd, selectedpoints, colorscale, rev)
     figtime = create_time_series(dff, option_slctd, selectedpoints, minindex, maxindex)
