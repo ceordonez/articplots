@@ -18,10 +18,10 @@ from dash.dependencies import Input, Output, State
 # Read data
 data = pd.read_csv('others/AllData.csv', parse_dates=[1], index_col=[0])
 data = data.set_index('Datetime')
-data = data.resample('720T').mean()
-data = data[:'24-08-2020']
+data = data.resample('360T').mean()
+#data = data['30-05-2021':]
 data = data.reset_index()
-data['CH4d_ppm'] = data['CH4d_ppm']
+#data['CH4d_ppm'] = data['CH4d_ppm']
 data['Date'] = data['Datetime'].dt.strftime('%d-%m-%y %H:%M')
 data['CH4'] = data['CH4d_ppm'].round(2).astype(str)
 data['Temperature'] = data['Temp °C'].round(2).astype(str)
@@ -149,12 +149,12 @@ app.layout = dbc.Container(
                                 id='slct_var',# {{{
                                 options=[
                                     {"label":"Carbon Dioxide", "value":'CO2d_ppm'},
+                                    {"label":"Methane", "value":"CH4d_ppm"},
                                     {"label":"Temperature", "value":"Temp °C"},
                                     {"label":"Salinity", "value":'Sal psu'},
                                     {"label":"Oxygen saturation", "value":'ODO % sat'},
                                     {"label":"Turbidity", "value":'Turbidity FNU'},
                                     {"label":"Specific Conductivity", "value":'SpCond µS/cm'},
-                                    # {"label":"Methane", "value":"CH4d_ppm"},
                                     ],
                                 multi=False,
                                 optionHeight=35,
@@ -325,8 +325,8 @@ def create_map(dff, option_slctd, selectedpoints, cscale, rev):# {{{
     unit = units(option_slctd)
     sc = dff[option_slctd]
     vmean = sc.iloc[selectedpoints].mean()
-    if option_slctd == 'Turbidity FNU':
-        markers = dict(size=15, opacity=0.7, color=sc, showscale=True, colorscale=cscale, reversescale=rev, colorbar=dict(title=unit, len=1), cmin=sc.iloc[selectedpoints].min())
+    if option_slctd == 'Turbidity FNU' or option_slctd == 'CO2d_ppm' or option_slctd == 'CH4d_ppm':
+        markers = dict(size=15, opacity=0.7, color=sc, showscale=True, colorscale=cscale, reversescale=rev, colorbar=dict(title=unit, len=1), cmin=sc.iloc[selectedpoints].min(), cmax=sc.iloc[selectedpoints].max())
     else:
         markers = dict(size=15, opacity=0.7, color=sc, showscale=True, colorscale=cscale, reversescale=rev, colorbar=dict(title=unit, len=1), cmid=vmean)
     nameev = namevar(option_slctd)

@@ -18,9 +18,9 @@ def plot_data(data):
 
     """
 
-    # fig_TS = plot_timeseries(data)
+    fig_TS = plot_timeseries(data)
 
-    # fig_MAP = plot_map(data)
+    fig_MAP = plot_map(data)
     combinated_plots(data)
 
 
@@ -90,7 +90,7 @@ def plot_map(data):# {{{
     data['Date'] = data['Datetime'].dt.strftime('%d-%m-%Y %H:%M')
     data['CH4'] = data['CH4d_ppm'].round(2).astype(str)
     data['CO2'] = data['CO2d_ppm'].round(1).astype(str)
-    mapbox_access_token = open(".mapbox_token").read()
+    #mapbox_access_token = open(".mapbox_token").read()
 
     plotdata = []
     for event in ['CH4d_ppm']:#, 'CO2d_ppm']:
@@ -248,7 +248,7 @@ def plot_map(data):# {{{
     fig.update_layout(layout)
     # fig = go.Figure(dict(data=plotdata, layout=layout))
     fig.show()
-    #pio.write_html(fig, 'map_data.html', auto_open=False)# }}}
+    pio.write_html(fig, 'map_data.html', auto_open=False)# }}}
 
 def combinated_plots(data):
 
@@ -261,8 +261,6 @@ def combinated_plots(data):
     dff['Date'] = dff['Datetime'].dt.strftime('%d-%m-%y %H:%M')
     dff['CH4'] = dff['CH4d_ppm'].round(2).astype(str)
     dff['CO2'] = dff['CO2d_ppm'].round(1).astype(str)
-    print(dff.head())
-    print(dff.tail())
     for event in ['CH4d_ppm', 'CO2d_ppm']:
         ssc = True
         sc = data[event]
@@ -418,5 +416,5 @@ def combinated_plots(data):
            #      ),
            #      type="date"
            #  )
-    fig.show()
+    pio.write_html(fig, 'combinated_plots.html', auto_open=False)
     #fig.update_xaxes(rangeslider={'visible':True}, row=2, col=1)
