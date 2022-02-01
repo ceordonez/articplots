@@ -1,7 +1,7 @@
 paths:
-  zip: '/home/cesar/Dropbox/Cesar/PhD/Data/Mauritius/2021/ZIPDATA'
-  unzip: '/home/cesar/Dropbox/Cesar/PhD/Data/Mauritius/2021/UNZIPDATA'
-  exopath: '/home/cesar/Dropbox/Cesar/PhD/Data/Mauritius/2021/RawData'
+  zip: '/home/cesar/Dropbox/Cesar/PhD/Data/Mauritius/2022/ZIPDATA'
+  unzip: '/home/cesar/Dropbox/Cesar/PhD/Data/Mauritius/2022/UNZIPDATA'
+  exopath: '/home/cesar/Dropbox/Cesar/PhD/Data/Mauritius/2022/RawData'
   filepath: '.'
 
 readprofile: False # read datafile on filepath folder

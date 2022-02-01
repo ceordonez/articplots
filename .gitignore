@@ -2,4 +2,10 @@ venv
 *.pyc
 .env
 .DS_Store
+Dash*
+*.png
+*.html
+.~*
+Data_20*
+AllData_w*
 

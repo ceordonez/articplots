@@ -6,10 +6,8 @@
 import logging
 import os
 import pandas as pd
-import sys
 
 import matplotlib.pyplot as plt
-from filecmp import dircmp
 from datetime import datetime
 
 def read_data(conffile):
@@ -45,7 +43,6 @@ def read_data(conffile):
             logging.info('There are not new data on: %s',
                     now.strftime('%d-%m-%Y %H:%M'))
 
-        exodata = read_oldexo(path_unzipdata, path_exo2)
         logging.info('Reading GPS data')
         GPSdata = read_gps(path_unzipdata)
 
@@ -53,7 +50,15 @@ def read_data(conffile):
         logging.info('Reading LGR data')
         LGRdata = read_lgr(path_unzipdata)
         logging.info('Reading EXO data')
-        data = GPSdata.join([LGRdata, exodata])
+        exodata = read_oldexo(path_unzipdata, path_exo2)
+        if GPSdata.empty and exodata.empty:
+            data = LGRdata
+        elif GPSdata.empty:
+            data = LGRdata.join([exodata])
+        elif exodata.empty:
+            data = LGRdata.join([GPSdata])
+        else:
+            data = LGRdata.join([GPSdata, exodata])
         #for col in LGRdata.columns:
         #    fig, ax = plt.subplots(1, 1, figsize=(5,3))
         #    LGRdata[col].plot()
@@ -65,7 +70,7 @@ def read_data(conffile):
         #data = GPSdata.join([LGRdata])
         data = data.resample('10T').mean()
         data = data.reset_index()
-        data.to_csv('Data_20211219.csv')
+        data.to_csv('Data_20220115.csv')
     return data
 
 
@@ -81,7 +86,6 @@ def read_exo(path_unzipdata):# {{{
     TODO
 
     """
-    import numpy as np
 
     allfiles = os.listdir(path_unzipdata)
     i = 0
@@ -125,7 +129,6 @@ def read_oldexo(path_unzipdata, path_exo2):# {{{
     TODO
 
     """
-    import numpy as np
 
     i = 0
     data = []
@@ -146,12 +149,15 @@ def read_oldexo(path_unzipdata, path_exo2):# {{{
         #pd.to_datetime(exodata['Date (MM/DD/YYYY)'].dt.strftime('%m/%d/%Y') + ' ' + exodata['Time (HH:MM:SS)'], format='%m/%d/%Y %H:%M:%S')
         data = append_pddata(i, data, exodata)
         i += 1
-    data = data.drop(['Site Name'], axis=1)# 'Date (MM/DD/YYYY)', 'Time (HH:mm:ss)'], axis=1)
-    data.rename(columns={'Date (MM/DD/YYYY)_Time (HH:MM:SS)':'Datetime'}, inplace=True)
-    data = data.set_index('Datetime')
-    data = data.sort_index()
-    data = data.astype(float)
-    data = data.resample("1T").mean()
+    if not pd.DataFrame(data).empty:
+        data = data.drop(['Site Name'], axis=1)# 'Date (MM/DD/YYYY)', 'Time (HH:mm:ss)'], axis=1)
+        data.rename(columns={'Date (MM/DD/YYYY)_Time (HH:MM:SS)':'Datetime'}, inplace=True)
+        data = data.set_index('Datetime')
+        data = data.sort_index()
+        data = data.astype(float)
+        data = data.resample("1T").mean()
+    else:
+        data = pd.DataFrame(data)
     return data #}}}
     """# {{{
     dt = np.dtype([('Date', 'str'), ('Time', 'str'), ('Time_fract', 'int'),
@@ -217,7 +223,10 @@ def read_gps(path_unzipdata):# {{{
     d = {'Datetime': time, 'Latitude': lat, 'Longitude': lon}
     data = pd.DataFrame(data=d)
     data = data.set_index('Datetime')
-    data = data.resample("1T").mean()
+    if not data.empty:
+        data = data.resample("1T").mean()
+    else:
+        data = pd.DataFrame(data)
     return data# }}}
 
 def append_pddata(i, data, newdata):# {{{
@@ -253,6 +262,7 @@ def read_lgr(newpath):# {{{
         return ifooter# }}}
     data = []
     i = 0
+    custom_parser = lambda x: datetime.strptime(x, "%m/%d/%Y %H:%M:%S.%f")
     for alldata in os.listdir(newpath):
         allfiles = os.path.join(newpath, alldata)
         LGRfolderdata = [x for x in os.listdir(allfiles) if any(s in x for s in ('YB', 'AtmGHG', 'atmGHG'))]
@@ -272,8 +282,9 @@ def read_lgr(newpath):# {{{
                 ifoot = footer_pos(readfile)
                 ## Reading column 0 is time, column 7 [CH4]d_ppm and column 9 [CO2]d_ppm
                 rfile = pd.read_csv(readfile, sep=',', header=1, skipfooter=ifoot,
-                        squeeze=True, infer_datetime_format=True, parse_dates=[0],
-                        usecols=[0, 3, 7, 9, 11, 13, 17, 19], engine='python', index_col=[0], names=['Time', 'H20_ppm', 'CH4d_ppm', 'CO2d_ppm', 'GasP_torr', 'GasT_C', 'RD0_us', 'RD1_us'])
+                        squeeze=True,skipinitialspace=True, parse_dates=[0], index_col=[0], date_parser=custom_parser,
+                        usecols=[0, 3, 7, 9, 11, 13, 17, 19], engine='python', names=['Datetime', 'H20_ppm', 'CH4d_ppm', 'CO2d_ppm', 'GasP_torr', 'GasT_C', 'RD0_us', 'RD1_us'])
+                #rfile['Time'] = pd.to_datetime(rfile['Time'], format='%m/%d/%Y %H:%M:%S.%f')
                 data = append_pddata(i, data, rfile)
                 i += 1
     data = data.sort_index()
