@@ -23,7 +23,7 @@ def main():
     logging.info('STEP 1: READING DATA')
     Data = read_data(conffile)
     logging.info('STEP 2: Plotting data')
-    plot_data(Data)
+    #plot_data(Data)
     # plot_map(Data)
     logging.info("***** ROUTINE COMPLETED SUCCESFULLY*****")
 

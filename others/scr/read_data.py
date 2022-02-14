@@ -5,10 +5,13 @@
 
 import logging
 import os
-import pandas as pd
+import zipfile as zf
+from datetime import datetime
 
 import matplotlib.pyplot as plt
-from datetime import datetime
+
+import pandas as pd
+
 
 def read_data(conffile):
     """Main routine to read Mauritius data.# {{{
@@ -311,9 +314,6 @@ def uncompress_data(path_zipdata, path_unzipdata, rec=False):# {{{
     newunzipfile:
 
     """# }}}
-    import zipfile as zf
-    import io
-    import shutil
 
     zipfiles = os.listdir(path_zipdata)
     unzipfiles = os.listdir(path_unzipdata)
