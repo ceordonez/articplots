@@ -73,7 +73,7 @@ def read_data(conffile):
         #data = GPSdata.join([LGRdata])
         data = data.resample('10T').mean()
         data = data.reset_index()
-        data.to_csv('Data_20220115.csv')
+        data.to_csv(conffile['files']['datafile'])
     return data
 
 
